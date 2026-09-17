@@ -1,0 +1,84 @@
+# Adversarial Fraud & AML Detection Arena -- default configuration.
+# Every script reads this; override individual keys via CLI flags.
+
+paths:
+  synthetic_ledger: data/synthetic/ledger.parquet
+  holdout_clean: data/processed/holdout_clean.parquet
+  detector: artifacts/detector_r0.lgb
+  reports: reports
+  artifacts: artifacts
+
+synthetic:
+  # 2M rows over 20k accounts gives ~100 transactions per account, which is what
+  # makes the relational features (degree, burst, reciprocity, cycles) carry real
+  # signal. At 40k rows each account had ~13 transactions and the graph features
+  # were pure noise.
+  accounts: 20000
+  rows: 2000000
+  # The real IBM AML rate is ~0.1%. We use 0.2% so that 2M rows yield ~400
+  # labelled pattern instances; at 0.1% there were too few patterns for the model
+  # to learn typology shape at all. Still a severe imbalance, and the holdout is
+  # always evaluated at its true prevalence.
+  laundering_rate: 0.002
+  start: "2026-01-01"
+  days: 180
+  seed: 20260917
+
+features:
+  windows_hours: [1, 24, 168]   # 1h, 1d, 7d
+  max_cycle_len: 4
+
+detector:
+  # Time-based split fractions. Never random: a random split leaks future graph
+  # state into the past and inflates every metric.
+  train_frac: 0.60
+  valid_frac: 0.15
+  holdout_frac: 0.25
+  # Negatives per positive kept for training. The graph and the holdout are
+  # never downsampled; see detector.model.downsample_negatives.
+  negative_ratio: 25
+  lightgbm:
+    objective: binary
+    n_estimators: 400
+    learning_rate: 0.05
+    num_leaves: 63
+    min_child_samples: 40
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    n_jobs: -1
+    verbose: -1
+
+threshold:
+  # Fixed alert budget: flag this fraction of transactions, no more. Mirrors the
+  # real constraint in AML work (analyst capacity) and -- critically -- keeps
+  # recall comparable across arms-race rounds.
+  alert_budget: 0.005
+
+adversary:
+  population: 100
+  generations: 40
+  episodes_per_eval: 5          # averaging over episodes stops the GA from
+                                # overfitting one freak background account
+  tournament_size: 3
+  crossover_prob: 0.7
+  mutation_prob: 0.2
+  elitism: 5
+  seed: 424242
+  episode:
+    amount_goal: 250000.0
+    deadline_hours: 336         # two weeks
+  fitness:
+    alpha: 1.0                  # completion exponent
+    beta: 1.0                   # evasion exponent
+    gamma: 0.1                  # cost weight
+    lambda_time: 0.3            # elapsed-time penalty inside cost
+    completion_floor: 0.95      # below this, fitness is exactly 0
+  constraints:
+    min_tranche: 50.0
+    fee_rate: 0.002             # per-hop proportional fee
+
+arena:
+  rounds: 5
+  injection_cap: 0.20           # adversary positives <= 20% of existing positives

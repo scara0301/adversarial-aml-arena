@@ -1,0 +1,117 @@
+########## PHASE 1a: generate ##########
+generating 2,000,000 transactions across 20,000 accounts over 180 days at a 0.200% laundering rate
+
+wrote C:\projs\MINI PROJ\data\synthetic\ledger.parquet  (59.5 MB)
+  rows            2,000,001
+  laundering      4,001 (0.2000%)
+  patterns        417
+  accounts        20,000
+  span            2026-01-01 .. 2026-06-29
+
+  transactions by typology
+    benign          1,996,000
+    stack               1,156
+    gather-scatter        991
+    fan-out               787
+    fan-in                743
+    cycle                 324
+
+########## PHASE 1b: train detector ##########
+loading C:\projs\MINI PROJ\data\synthetic\ledger.parquet
+  2,000,001 rows, 4,001 laundering (0.2000%)
+  account graph: 20,000 accounts in 10.3s
+
+chronological split
+  train    1,200,000 rows   2,171 pos (0.1809%)  2026-01-01 .. 2026-04-18
+  valid      300,000 rows     698 pos (0.2327%)  2026-04-18 .. 2026-05-16
+  holdout    500,001 rows   1,132 pos (0.2264%)  2026-05-16 .. 2026-06-29
+
+froze clean holdout -> C:\projs\MINI PROJ\data\processed\holdout_clean.parquet
+
+training LightGBM
+  205 trees, 74 features, 11.8s
+  scale_pos_weight = 25.0
+
+Frozen clean holdout
+--------------------
+  transactions        500,001
+  laundering          1,132 (0.2264%)
+  threshold (tau)     0.469956
+  alerts raised       2,501 (0.5002% of traffic)
+
+  RECALL @ budget     0.5371   <-- primary metric
+  PR-AUC              0.4542
+  precision @ budget  0.2431
+  ROC-AUC             0.9713   (misleading at this prevalence)
+
+  recall by typology
+    stack           0.7454
+    cycle           0.4815
+    gather-scatter  0.4581
+    fan-out         0.4142
+    fan-in          0.4109
+
+saved detector -> C:\projs\MINI PROJ\artifacts\detector_r0.lgb
+wrote C:\projs\MINI PROJ\reports\phase1_metrics.json
+wrote figures -> C:\projs\MINI PROJ\reports/phase1_*.png
+
+Phase 1 gate (PR-AUC >= 0.40 and recall@budget >= 0.50): PASS
+  chance-level PR-AUC at this prevalence: 0.00226
+
+########## PHASE 2: evolve adversary ##########
+loading detector C:\projs\MINI PROJ\artifacts\detector_r0.lgb
+  205 trees, 74 features
+loading ledger C:\projs\MINI PROJ\data\synthetic\ledger.parquet
+  froze background graph: 20,000 accounts, 2,000,001 rows, 10.1s
+  threshold at a 0.50% alert budget: tau = 0.470479
+
+evolving: population 100, 40 generations, 5 episodes per evaluation (~20,500 candidate evaluations)
+  goal: move $250,000 within 336h; completion floor 0.95
+  gen   0  best=0.2756  mean=0.0289  completion=0.997  evasion=0.294  txns=9  diversity=0.392
+  gen   5  best=0.9976  mean=0.5203  completion=0.998  evasion=1.000  txns=6  diversity=0.358
+  gen  10  best=0.9977  mean=0.8011  completion=0.998  evasion=1.000  txns=9  diversity=0.325
+  gen  15  best=0.9978  mean=0.8186  completion=0.998  evasion=1.000  txns=7  diversity=0.334
+  gen  20  best=0.9978  mean=0.8573  completion=0.998  evasion=1.000  txns=7  diversity=0.368
+  gen  25  best=0.9978  mean=0.8639  completion=0.998  evasion=1.000  txns=13  diversity=0.350
+  gen  30  best=0.9978  mean=0.8613  completion=0.998  evasion=1.000  txns=13  diversity=0.333
+  gen  35  best=0.9978  mean=0.9080  completion=0.998  evasion=1.000  txns=13  diversity=0.344
+  gen  40  best=0.9978  mean=0.8720  completion=0.998  evasion=1.000  txns=13  diversity=0.365
+  done in 4.6 min
+
+re-scoring strategies on 20 fresh episodes
+
+Detector recall on adversary transactions
+------------------------------------------
+  naive (hand-written)      0.7667
+  random (unevolved mean)   0.7500
+  evolved (GA best)         0.0000
+
+  naive fitness            0.2318  (completion 0.998, evasion 0.232)
+  random fitness           0.0000
+  evolved fitness          0.9973  (completion 0.998, evasion 1.000)
+
+best evolved strategy
+  template            fan-out
+  routing hops        1
+  tranches per leg    4
+  tranche skew        0.179
+  threshold hug       0.612
+  mean delay          0.0 h
+  delay jitter        0.206
+  business-hours bias 0.977
+  mule pool           8
+  mule reuse          0.030
+  format mix          0.341
+  hop dormancy        0.0 h
+
+wrote C:\projs\MINI PROJ\reports\phase2_metrics.json
+wrote C:\projs\MINI PROJ\reports\phase2_best_strategy_example.csv  (12 transactions)
+wrote figures -> C:\projs\MINI PROJ\reports/phase2_*.png
+
+Phase 2 gate (fitness improved, recall gap > 0.15, completion >= floor): PASS
+  best fitness 0.2756 -> 0.9978
+  mean fitness 0.0289 -> 0.8720
+  recall gap 0.7667
+  evolved completion 0.9980
+
+########## DONE ##########
