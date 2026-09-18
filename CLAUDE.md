@@ -60,7 +60,7 @@ invariant rather than a repair step. Prefer it to patching values after the fact
 | 1 | 1 | Synthetic generator, loader, feature pipeline, LightGBM detector, alert-budget metrics | done — recall@budget 0.537, PR-AUC 0.454 |
 | 2 | 2, 3 | GA adversary: genome, decoder, constraints, fitness, DEAP driver | done — detector recall 0.767 naive vs 0.247 evolved |
 | 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | not started |
-| 4 | 5 | Streamlit + Plotly dashboard | not started |
+| 4 | 5 | Streamlit + Plotly dashboard | prototype explainer built ahead of Phase 3 — see `dashboard/README.md` |
 | 5 | -- | Real IBM AML data, PaySim cross-validation | not started |
 | 6 | -- | Final consolidated report | not started |
 

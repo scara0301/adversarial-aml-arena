@@ -44,6 +44,26 @@ The first script writes a 2M-row synthetic ledger; the second trains the detecto
 clean holdout; the third evolves the adversary against it. Each writes metrics and figures to
 `reports/`. Total runtime is roughly 25 minutes on a 12-core machine.
 
+## Dashboard
+
+An interactive Streamlit explainer, built ahead of Phase 3 to walk through what Phases 1-2
+produced. Run it after the three commands above:
+
+```bash
+uv run streamlit run dashboard/app.py
+```
+
+Six pages: an overview with the headline result and the four invariants, a Phase 1 page (detector
+metrics, PR curve, typology recall, feature importance), a Phase 2 page (GA convergence, the
+naive-vs-evolved recall gap, the winning strategy decoded), a live genome explorer that decodes
+and scores any set of the twelve genes against the actual trained detector, an architecture
+walkthrough, and a limitations page. Everything except the live explorer reads the static JSON in
+`reports/` rather than retraining or re-evolving anything — see `dashboard/README.md` for how it's
+put together.
+
+This is **not** the full Phase 4 arena dashboard: there's no round-by-round arms-race curve yet,
+since that data doesn't exist until Phase 3's closed loop is built. It only shows round 0.
+
 ## Phase status
 
 | Phase | Objective | Scope | Status |
@@ -52,7 +72,7 @@ clean holdout; the third evolves the adversary against it. Each writes metrics a
 | 1 | 1 | Synthetic generator, loader, feature pipeline, LightGBM detector, alert-budget metrics | done |
 | 2 | 2, 3 | GA adversary: genome, decoder, constraints, fitness, DEAP driver | done |
 | 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | not started |
-| 4 | 5 | Streamlit + Plotly dashboard | not started |
+| 4 | 5 | Streamlit + Plotly dashboard | prototype explainer built ahead of Phase 3 (`dashboard/`) |
 | 5 | — | Real IBM AML data, PaySim cross-validation | not started |
 | 6 | — | Final consolidated report | not started |
 
