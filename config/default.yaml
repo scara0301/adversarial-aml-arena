@@ -77,8 +77,25 @@ adversary:
     completion_floor: 0.95      # below this, fitness is exactly 0
   constraints:
     min_tranche: 50.0
-    fee_rate: 0.002             # per-hop proportional fee
+    # Extra per-hop fee. Keep at 0: a constant fee gives every adversary row an fx_loss no
+    # other traffic has, and the retrained detector learns that instead of the strategy.
+    # The cost of hops is realised by the shared FX process (see decoder.DEFAULT_FEE_RATE).
+    fee_rate: 0.0
 
 arena:
   rounds: 5
-  injection_cap: 0.20           # adversary positives <= 20% of existing positives
+  # Adversary rows fed back to the detector are capped at this fraction of the
+  # ORIGINAL positive count, split into equal row slices across the rounds in the pool.
+  # The guard against detector collapse and against forgetting old adversaries.
+  injection_cap: 0.20
+  top_k: 8                      # mutually-distinct strategies fed back per round
+  instances_per_strategy: 6     # episodes each strategy is decoded on
+  warm_start: true              # seed each round's GA with the pool's recent strategies
+  # Each episode draws its own goal, log-uniformly, to the cent. NOT a fixed number:
+  # a fixed $250,000.00 is a round amount (the generator's laundering is never round,
+  # so the detector learned round = benign, and the GA found that in round 1), and a
+  # constant the retrained detector can memorise. See EpisodeSampler.sample.
+  amount_goal_range: [50000, 400000]
+  eval_episodes: 30             # fixed held-out episodes every (detector, adversary) pair is scored on
+  n_random_probes: 10           # unseen random genomes, to test whether feedback generalised
+  artifacts: artifacts/arena    # D_0 .. D_R are saved here (gitignored)

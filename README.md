@@ -37,32 +37,42 @@ uv run python scripts/evolve_adversary.py
 ```
 
 ```bash
+uv run python scripts/run_arena.py
+```
+
+```bash
+uv run python scripts/reevaluate_arena.py --episodes 200
+```
+
+```bash
 uv run pytest -q
 ```
 
 The first script writes a 2M-row synthetic ledger; the second trains the detector and freezes the
-clean holdout; the third evolves the adversary against it. Each writes metrics and figures to
-`reports/`. Total runtime is roughly 25 minutes on a 12-core machine.
+clean holdout; the third evolves the adversary against it; the fourth runs the closed loop for five
+rounds of retraining (about half an hour); the fifth re-measures that run on more episodes with
+confidence intervals, without re-running any search. Each writes metrics and figures to `reports/`.
 
 ## Dashboard
 
-An interactive Streamlit explainer, built ahead of Phase 3 to walk through what Phases 1-2
-produced. Run it after the three commands above:
+An interactive Streamlit explainer, built ahead of the final Phase 4 dashboard, that walks through
+what Phases 1-3 produced. Run it after the commands above:
 
 ```bash
 uv run streamlit run dashboard/app.py
 ```
 
-Six pages: an overview with the headline result and the four invariants, a Phase 1 page (detector
+Seven pages: an overview with the headline result and the four invariants, a Phase 1 page (detector
 metrics, PR curve, typology recall, feature importance), a Phase 2 page (GA convergence, the
-naive-vs-evolved recall gap, the winning strategy decoded), a live genome explorer that decodes
+naive-vs-evolved recall gap, the winning strategy decoded), a Phase 3 page (the arms-race curve with
+confidence intervals, the cross-play matrix, the clean-holdout cost), a live genome explorer that decodes
 and scores any set of the twelve genes against the actual trained detector, an architecture
 walkthrough, and a limitations page. Everything except the live explorer reads the static JSON in
 `reports/` rather than retraining or re-evolving anything — see `dashboard/README.md` for how it's
 put together.
 
-This is **not** the full Phase 4 arena dashboard: there's no round-by-round arms-race curve yet,
-since that data doesn't exist until Phase 3's closed loop is built. It only shows round 0.
+This is not the final Phase 4 dashboard: everything is a replay of a finished run, not a live feed,
+and the SHAP drift view is not built.
 
 ## Phase status
 
@@ -71,14 +81,15 @@ since that data doesn't exist until Phase 3's closed loop is built. It only show
 | 0 | — | Scaffold, canonical schema, config | done |
 | 1 | 1 | Synthetic generator, loader, feature pipeline, LightGBM detector, alert-budget metrics | done |
 | 2 | 2, 3 | GA adversary: genome, decoder, constraints, fitness, DEAP driver | done |
-| 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | not started |
+| 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | done |
 | 4 | 5 | Streamlit + Plotly dashboard | prototype explainer built ahead of Phase 3 (`dashboard/`) |
 | 5 | — | Real IBM AML data, PaySim cross-validation | not started |
 | 6 | — | Final consolidated report | not started |
 
 Writeups with results and design reasoning: [docs/phase1.md](docs/phase1.md),
-[docs/phase2.md](docs/phase2.md). Notebooks: `notebooks/phase1_detector.ipynb`,
-`notebooks/phase2_adversary.ipynb`.
+[docs/phase2.md](docs/phase2.md), [docs/phase3.md](docs/phase3.md). Notebooks:
+`notebooks/phase1_detector.ipynb`, `notebooks/phase2_adversary.ipynb`,
+`notebooks/phase3_arms_race.ipynb`.
 
 ## How it works
 

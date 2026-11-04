@@ -52,14 +52,47 @@ leak was fixed by routing benign and laundering rows through one shared function
 Same reasoning as having exactly one `featurize()`, and as making conservation a decoder
 invariant rather than a repair step. Prefer it to patching values after the fact.
 
+**A fixed constant in the experiment is an artefact waiting to be found.** Phase 3's first run
+reached detector recall 0.000 in round 1. Reading the decoded transactions showed one $250,000.00
+transfer: with a single tranche the decoder sends exactly the episode goal, every episode had the
+same round goal, and the generator's laundering is *never* round while 21.6% of benign traffic is.
+The detector had learned "round means benign" (`amount_mod_100` was the #2 feature all along), and
+the GA found the shortcut in one round. Episode goals are now drawn per episode, log-uniformly, to
+the cent. The generator artefact itself is **still there** (see `docs/phase1.md`, "A fourth
+artefact"; it inflates Phase 1 by ~3 recall points) and is the first thing to fix before Phase 5.
+The same run showed the closed loop works as an artefact *finder*: the next detector, trained on
+that strategy, closed the hole in one round.
+
+## Guards on the feedback loop (Phase 3)
+
+Retraining a detector on its adversary's output invites collapse, forgetting and overfitting.
+Each guard below answers one of those and is pinned by a test in `tests/test_loop.py`. Do not
+relax one without reading `src/arena/loop/pool.py` first.
+
+- **Cap**: adversary rows are at most `arena.injection_cap` (20%) of the *original* positive count.
+- **Always retrain from the original training set plus the pool**, never from the previous round's
+  already-augmented set -- augmenting an augmented set compounds drift.
+- **Equal row slices per round**, so an old evasion strategy is never traded away for a new one.
+  Counted in rows, not operations: operations range from 2 to 100+ rows, and counting operations
+  let one round starve another (a bug found and fixed in development).
+- **Time windows**: training-period adversary rows come only from operations that start *and
+  finish* inside the training period; validation and evaluation likewise use their own periods.
+  An operation that overruns its window is dropped whole, never cut.
+- **Only strategies with fitness > 0 are fed back**: fitness 0 means the goal was never completed,
+  and a failed attempt is noise, not a discovered evasion.
+- **Fixed episodes and a fixed decode seed for every (detector, adversary) comparison**, so two
+  cells of the cross-play matrix differ because the *players* differ, never because of the dice.
+- The Phase 3 gate checks that the loop and its guards work. It never requires the detector to
+  win: who is ahead at round R is the finding, and a gate demanding a winner would be rigged.
+
 ## Phase status
 
 | Phase | Objective | Scope | Status |
 |-------|-----------|-------|--------|
 | 0 | -- | Scaffold, canonical schema, config | done |
 | 1 | 1 | Synthetic generator, loader, feature pipeline, LightGBM detector, alert-budget metrics | done — recall@budget 0.537, PR-AUC 0.454 |
-| 2 | 2, 3 | GA adversary: genome, decoder, constraints, fitness, DEAP driver | done — detector recall 0.767 naive vs 0.247 evolved |
-| 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | not started |
+| 2 | 2, 3 | GA adversary: genome, decoder, constraints, fitness, DEAP driver | done — detector recall 0.750 naive vs 0.231 evolved (re-run after the decoder fix) |
+| 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | done — detector recall vs its contemporary adversary 0.125 → 0.510 over 5 rounds (adversary still wins 56% of episodes); holdout PR-AUC 0.454 → 0.421. `docs/phase3.md` |
 | 4 | 5 | Streamlit + Plotly dashboard | prototype explainer built ahead of Phase 3 — see `dashboard/README.md` |
 | 5 | -- | Real IBM AML data, PaySim cross-validation | not started |
 | 6 | -- | Final consolidated report | not started |
@@ -73,7 +106,10 @@ interpreter is 3.14, where LightGBM and especially DEAP wheels are a risk.
 uv run python scripts/make_synthetic.py --rows 500000 --out data/synthetic/ledger.parquet
 uv run python scripts/train_detector.py --ledger data/synthetic/ledger.parquet
 uv run python scripts/evolve_adversary.py --detector artifacts/detector_r0.lgb
+uv run python scripts/run_arena.py          # Phase 3, ~half an hour at full size
+uv run python scripts/reevaluate_arena.py --episodes 200   # sharper measurement, no GA re-run
 uv run pytest -q
+uv run streamlit run dashboard/app.py
 ```
 
 ## Module map
@@ -99,6 +135,14 @@ src/arena/
     constraints.py       hard repair into the plausibility envelope
     fitness.py           completion^alpha * evasion^beta - gamma*cost, with guards
     ga.py                DEAP driver -- ALL DEAP imports confined here
+  loop/                  Phase 3: the closed loop
+    pool.py              StrategyPool: caps, slices and time-windows the feedback to the detector
+    evaluation.py        score_strategy / score_pool: fixed episodes + fixed decode seed, so cells compare
+    orchestrator.py      run_arena(): rounds, retraining, cross-play matrix, runtime invariant checks
+    reevaluate.py        re-measure a finished run on more episodes with bootstrap CIs (no GA re-run)
+    gate.py              the Phase 3 gate (checks the loop works; never requires the detector to win)
+    report.py            the four Phase 3 figures + summary, redrawable from reports/phase3_metrics.json
+dashboard/               Streamlit explainer (see dashboard/README.md)
 ```
 
 ### Why `AccountGraph` looks the way it does
@@ -106,7 +150,9 @@ src/arena/
 A GA run is population 100 x 40 generations x 5 episodes = ~20,000 candidate evaluations.
 Re-featurizing a multi-million-row background ledger per candidate is impossible. So:
 
-- `AccountGraph.build(background)` does one O(N) pass, once per arms-race round.
+- `AccountGraph.build(background)` does one O(N) pass, once per run. The background never
+  changes between arms-race rounds -- adversary data is fed to the detector as training rows and
+  is never added to the background ledger -- so the frozen graph is reused for every round.
 - `AccountGraph.overlay(sub_ledger)` returns a copy-on-write view. Only accounts the sub-ledger
   touches (tens, bounded by hops x mules) get modified counters; everything else reads through to
   the frozen snapshot.
@@ -149,3 +195,10 @@ Recorded so they are not rediscovered at demo time:
    per-transaction feature subset.
 4. **Synthetic typologies are cleaner than real ones.** Phase 1/2 numbers on synthetic data are a
    pipeline check, not the project's headline result. Expect them to drop on real IBM AML data.
+5. **The generator's laundering is never a round number**, while 21.6% of benign amounts are. That
+   is a free tell the detector learned (`amount_mod_100`, the #2 feature), worth about +3 points of
+   recall and +2 of PR-AUC in Phase 1 (measured by ablation, `docs/phase1.md`). Real laundering is
+   often round. Phase 3 closes the adversary's access to it; the artefact is unfixed.
+6. **Phase 3's adversary can read the detector's exact scores** and threshold, which a real
+   launderer cannot. That makes it stronger than a realistic attacker, so the detector's numbers
+   are conservative on that axis.

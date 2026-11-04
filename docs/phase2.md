@@ -14,37 +14,44 @@ uv run python scripts/evolve_adversary.py
 
 ## Results
 
-Population 100, 40 generations, 5 episodes per evaluation — 20,500 candidate evaluations in
-**5.0 minutes**. All strategies re-scored afterwards on 20 freshly drawn episodes, so the
-comparison is like-for-like rather than each strategy's own lucky draw.
+Population 100, 40 generations, 5 episodes per evaluation — 20,500 candidate evaluations in about
+**6 minutes**. All strategies re-scored afterwards on 20 freshly drawn episodes, so the comparison
+is like-for-like rather than each strategy's own lucky draw.
+
+> **These numbers are from a re-run.** The first run (recall 0.767 → 0.247, gap 0.520) used a
+> decoder that stamped every adversary transaction with a constant fee, which Phase 3 showed is a
+> fingerprint (see [phase3.md](phase3.md)). The decoder was fixed and this phase re-run. The
+> headline moved by less than 0.02 — the round-0 detector barely used the affected feature — so the
+> conclusion stands. The *winning genome* did change, and some details I first reported about it
+> did not replicate; see "What the adversary learned".
 
 ### The headline: detector recall against each strategy
 
 | Strategy | Detector recall | Fitness | Completion | Evasion |
 |---|---|---|---|---|
-| naive (hand-written) | **0.767** | 0.232 | 0.998 | 0.232 |
-| random (unevolved, mean of 10) | 0.755 | 0.001 | — | — |
-| **evolved (GA best)** | **0.247** | 0.767 | 0.998 | 0.769 |
+| naive (hand-written) | **0.750** | 0.260 | 0.999 | 0.261 |
+| random (unevolved, mean of 10) | 0.748 | 0.002 | — | — |
+| **evolved (GA best)** | **0.231** | 0.771 | 0.999 | 0.773 |
 
-**Recall gap: 0.520.** The detector catches roughly three quarters of naive laundering and about
-a quarter of the evolved strategy, while the evolved strategy still delivers 99.8% of the goal
-amount within the deadline. That gap is Phase 2's deliverable: it is the proof there is something
-for the arms race to race against, and the starting point of Phase 3's curve.
+**Recall gap: 0.519.** The detector catches three quarters of naive laundering and under a quarter
+of the evolved strategy, while the evolved strategy still delivers 99.9% of the goal amount within
+the deadline. That gap is Phase 2's deliverable: the proof there is something for the arms race to
+race against, and the starting point of Phase 3.
 
 ### Convergence
 
 | Generation | Best fitness | Mean fitness | Evasion | Diversity |
 |---|---|---|---|---|
-| 0 | 0.276 | 0.029 | 0.294 | 0.392 |
-| 10 | 0.887 | 0.545 | 0.890 | 0.343 |
-| 20 | 0.891 | 0.661 | 0.904 | 0.359 |
-| 40 | 0.904 | 0.699 | 0.906 | 0.366 |
+| 0 | 0.318 | 0.029 | 0.326 | 0.392 |
+| 10 | 0.906 | 0.605 | 0.917 | 0.346 |
+| 20 | 0.906 | 0.680 | 0.917 | 0.312 |
+| 40 | 0.911 | 0.707 | 0.913 | 0.358 |
 
-The **population mean** is the signal that selection works (0.029 → 0.699, a 24× rise).
+The **population mean** is the signal that selection works (0.029 → 0.707, a 24× rise).
 Best-of-generation matters less: elitism carries a lucky initial draw forward untouched, so a
-flat best curve would not mean the GA failed to learn. Diversity declines only from 0.392 to
-0.366 — fitness sharing is keeping niches alive, which is what gives Phase 3 a varied strategy
-pool rather than eight copies of one winner.
+flat best curve would not mean the GA failed to learn. Diversity stays near 0.35 — fitness sharing
+is keeping niches alive, which is what gives Phase 3 a varied strategy pool rather than eight
+copies of one winner.
 
 Artifacts: `reports/phase2_metrics.json`, `reports/phase2_convergence.png`,
 `reports/phase2_recall_comparison.png`, `reports/phase2_best_strategy_example.csv`.
@@ -57,37 +64,46 @@ The winning genome:
 |---|---|---|
 | typology_template | stack | stack |
 | n_hops | 1 | 1 |
-| n_splits | 3 | 6 |
-| split_skew | 0.5 | 0.212 |
-| **threshold_hug** | 0.0 | **0.678** |
+| n_splits | 3 | 8 |
+| split_skew | 0.5 | 0.022 |
+| **threshold_hug** | 0.0 | **0.675** |
 | mean_delay_h | 0.5 | 0.0 |
-| delay_jitter | 0.1 | 0.791 |
-| **business_hours_bias** | 0.0 | **0.890** |
-| mule_pool_size | 1 | 2 |
-| mule_reuse | 1.0 | 0.755 |
-| **format_mix** | 0.5 | **0.000** |
-| dormancy_h | 0.0 | 86.5 |
+| delay_jitter | 0.1 | 0.126 |
+| business_hours_bias | 0.0 | 0.171 |
+| mule_pool_size | 1 | 6 |
+| mule_reuse | 1.0 | 0.588 |
+| format_mix | 0.5 | 0.039 |
+| dormancy_h | 0.0 | 26.0 |
 
-Decoded, that is 13 transfers of \$12.5k–\$26k, one minute apart, in business hours, via ACH and
-cheque, summing to exactly \$250,000.00 and spilling over into the next morning's business window.
+Decoded, that is 13 transfers of \$13k–\$26k from one account to another, one minute apart: eight
+in an evening burst, five the next morning, summing to exactly \$250,000.00.
 
-**The most interesting result is that the GA did not fully structure.** `threshold_hug` evolved to
-0.678, not 1.0 — a tranche cap of about \$28,000, comfortably *above* the \$10,000 reporting
-threshold. Every transaction in the winning strategy is over the threshold that the detector's
-strongest per-transaction feature is built around.
+**The robust finding: the GA did not fully structure.** `threshold_hug` evolved to 0.675, not 1.0 —
+a tranche cap of about \$28,000, comfortably *above* the \$10,000 reporting threshold. It reached
+0.678 in the first run and 0.675 in this one, from independent runs of the same search: this is the
+one number in the genome that is reproducibly *learned* and not drift. Every transaction in the
+winning strategy is over the threshold that the detector's strongest per-transaction feature is
+built around.
 
 That looks wrong until you consider what full structuring costs. Driving `threshold_hug` to 1.0
 would require 26+ tranches instead of 13, and those extra transactions create exactly the burst
 the relational features (`out_cnt_1h`, `out_cnt_24h`, `burst_ratio`, `gather_scatter_24h`) are
-designed to catch. The adversary found that **against a graph-aware detector, structuring below
-the reporting threshold is counterproductive**: it trades a modest amount-feature gain for a large
-burst-feature penalty. The winning move is instead to sit in the *fat tail of the benign amount
-distribution* — \$12k–\$26k transfers are unremarkable in traffic whose 95th percentile is around
-\$24k — and keep the transaction count low.
+designed to catch. Against a graph-aware detector, structuring below the reporting threshold looks
+counterproductive: it trades a modest amount-feature gain for a large burst-feature penalty. The
+winning move is to sit in the *fat tail of the benign amount distribution* — \$13k–\$26k transfers
+are unremarkable in traffic whose 95th percentile is around \$24k — and keep the transaction count
+low.
 
-Two smaller findings: `format_mix` went to 0.000, pinning every transfer to the lowest-scrutiny
-formats (ACH, cheque) rather than wire or cash; and `business_hours_bias` rose from 0 to 0.890,
-hiding the activity inside the benign diurnal rhythm.
+**What I over-read the first time.** The first write-up of this phase also reported that
+`business_hours_bias` "rose from 0 to 0.890, hiding the activity inside the benign diurnal rhythm",
+that `format_mix` "went to 0.000, pinning every transfer to the lowest-scrutiny formats", and that
+the strategy used 6 tranches. In this run those genes are 0.171, 0.039 and 8. They did not
+replicate, so they were drift and not discoveries. The reason is visible in the genome: with
+`n_hops = 1` there is a single layer of routing, so `mule_pool_size`, `mule_reuse` and
+`dormancy_h` have nothing to act on, and a gene with no fitness consequence wanders. Do not read a
+value into a gene the winning strategy does not use. (The decoded strategy is also nearly identical
+across the two runs — same shape, same size, same two bursts — which is the better evidence that
+the *behaviour* is stable even where the *genome* is not.)
 
 ## Design decisions
 
@@ -143,7 +159,7 @@ every way to score well without doing the task. Each property below closes a spe
 | Degenerate strategy | Why it would win | Guard |
 |---|---|---|
 | Move \$0 → never flagged | additive fitness rewards evasion alone | multiplicative form + hard `completion < 0.95 ⇒ 0` |
-| One giant transfer | fewest transactions = fewest flag chances | amount-weighted evasion |
+| One giant transfer | fewest transactions = fewest flag chances | amount-weighted evasion *(see correction below)* |
 | Shred into \$1 dust | each tranche individually unremarkable | \$50 tranche floor, 120-transaction cap, per-transaction fee |
 | Stall past the deadline | delay defeats burst features | post-deadline value does not count toward delivery |
 | Hide behind one freak account | overfits a dataset artefact | fitness averaged over 5 independent episodes |
@@ -187,12 +203,29 @@ plausibility constraint rather than a modelling convenience. The separation is a
 testing both the extreme case (all timing genes zeroed) and 200 random genomes.
 
 After the fix, evasion fell from a perfect 1.000 to 0.906 and detector recall rose from 0.000 to
-0.247 — the honest numbers reported above.
+0.247 in that run (0.231 after the later decoder fix) — the honest numbers reported above.
 
 The general lesson is worth recording for Phases 3–5: **when an adversarial search reports a
 perfect score, the first hypothesis should be that it found a bug in the simulation.** Every
 guard in `fitness.py` was written in anticipation of a specific loophole; this one was found by
 the GA first, which is the failure mode to expect again.
+
+## Correction, found in Phase 3: the "one giant transfer" guard did not guard
+
+The guard table above lists amount-weighted evasion as the defence against the strategy "send
+everything as one transfer", on the reasoning that flagging a single transfer would cost the
+adversary 100% of its evasion score. That reasoning is only half a guard. Amount-weighting makes
+*being flagged* expensive; it does nothing if the detector **does not flag** the transfer.
+
+Phase 2 never found out because its GA happened not to reach a one-tranche genome in 40
+generations. Phase 3's did, in round 1, and scored detector recall 0.000: the detector was blind to
+a lone round-number transfer (see the "fourth artefact" section of [phase1.md](phase1.md) and
+[phase3.md](phase3.md)). The fitness function has no defence against a degenerate strategy the
+*detector* cannot see, and was never going to: that is a property of the detector, and is exactly
+what the closed loop exists to find and close.
+
+Nothing here changes the Phase 2 headline (0.750 → 0.231 in the re-run; 0.767 → 0.247 originally), which was measured as reported. But the
+claim "this strategy is guarded against" was stronger than the evidence, and is withdrawn.
 
 ## Limitations
 
@@ -216,6 +249,6 @@ the GA first, which is the failure mode to expect again.
   final population, selected by `distinct_top` with a minimum genome separation. Taking the top
   eight by fitness alone would return eight near-identical genomes, and retraining on eight copies
   of one strategy teaches the detector almost nothing.
-- The naive-vs-evolved recall gap (0.767 → 0.247) as round 0 of the arms-race curve.
+- The naive-vs-evolved recall gap (0.750 → 0.231) as round 0 of the arms-race curve.
 - `AccountGraph.overlay` and the 4.8 ms-per-candidate evaluation cost, which is what makes
   re-evolving the adversary once per round affordable.

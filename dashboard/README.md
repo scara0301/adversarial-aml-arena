@@ -1,6 +1,6 @@
 # Dashboard
 
-An interactive Streamlit explainer for Phases 1-2, built ahead of Phase 3.
+An interactive Streamlit explainer for Phases 1-3.
 
 ```bash
 uv run streamlit run dashboard/app.py
@@ -8,16 +8,15 @@ uv run streamlit run dashboard/app.py
 
 ## What it is, and isn't
 
-Five of the six pages are read-only: they load `reports/phase{1,2}_metrics.json` and the
-`reports/*.png` figures those two scripts already wrote, and never touch the trained model.
-The sixth page, **Try the Adversary Yourself**, is the exception — it loads the real
-`artifacts/detector_r0.lgb` and the frozen background graph, and lets a visitor set the
+Six of the seven pages are read-only: they load `reports/phase{1,2,3}_metrics.json` and the
+`reports/*.png` figures those scripts already wrote, and never touch a trained model. The seventh,
+**Try the Adversary Yourself**, is the exception — it loads the real round-0 detector
+(`artifacts/detector_r0.lgb`) and the frozen background graph, and lets a visitor set the
 adversary's twelve genes with sliders and score the result live.
 
-This is **not** the full Phase 4 arena dashboard. There is no round-by-round arms-race curve
-here, because that data doesn't exist until Phase 3's closed-loop orchestrator is built — this
-shows round 0 only: one trained detector, one evolved adversary, no retraining loop between
-them.
+The Phase 3 page shows the arms-race curve with its bootstrap intervals, the cross-play matrix, and
+the clean-holdout cost, all computed from the JSON with no hard-coded numbers. It is a replay of a
+finished run, not a live feed, and it is not the final Phase 4 dashboard (no SHAP drift view yet).
 
 ## Layout
 
@@ -30,10 +29,11 @@ dashboard/
     overview.py         pitch, headline result, the four invariants, phase status
     phase1_detector.py  metrics, PR curve, typology recall, feature importance
     phase2_adversary.py convergence, recall gap, winning strategy decoded
+    phase3_arms_race.py  arms-race curve + CIs, cross-play matrix, holdout cost, what was fed back
     try_it.py            live genome explorer (sliders -> decode -> score)
     how_it_works.py      architecture walkthrough: the shared featurize(), the overlay,
                           money conservation, the simulation exploit the GA found
-    limitations.py       honest caveats, carried over from docs/phase{1,2}.md
+    limitations.py       honest caveats, carried over from docs/phase{1,2,3}.md
 ```
 
 Named `views/`, not `pages/`, on purpose: Streamlit auto-builds its own sidebar navigation from

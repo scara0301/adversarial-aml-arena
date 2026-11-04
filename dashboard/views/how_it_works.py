@@ -84,7 +84,7 @@ it found a bug, not a breakthrough.**
     st.subheader("The evolved strategy's real insight")
     st.markdown(
         """
-The winning genome set `threshold_hug = 0.678`, not 1.0 — every transaction
+The winning genome set `threshold_hug` to about 0.68 (0.678 and 0.675 in two independent runs), not 1.0 — every transaction
 in the winning strategy sits *above* the $10,000 reporting threshold, the
 single feature the detector leans on hardest.
 
@@ -96,5 +96,40 @@ the **benign** amount distribution, and keeping the transaction count low,
 beats structuring outright. See it for yourself on **Try the Adversary
 Yourself** — push `threshold_hug` to 1.0 and watch the transaction count (and
 the flag rate) climb.
+"""
+    )
+
+    st.subheader("The closed loop, and the guards that keep it honest")
+    st.markdown(
+        """
+Phase 3 retrains the detector on what the adversary found, round after round.
+That is exactly where an arms-race experiment usually fools itself, so every
+step has a guard:
+
+- **A cap.** Adversary rows are at most 20% of the *original* positive count.
+  Flood the training set with them and the detector is dragged toward the
+  adversary and away from real laundering.
+- **Always retrain from the original set plus the pool**, never from the
+  previous round's already-augmented set. Augmenting an augmented set
+  compounds drift every round.
+- **Equal slices per round**, counted in rows, so learning a new evasion never
+  costs the detector an old one. (A first version counted operations instead of
+  rows; operations range from 2 to 100+ rows, so one round could starve another
+  — caught by a test, not by luck.)
+- **Time windows.** The detector trains on operations from the training period,
+  validates on the validation period, and every adversary is *judged* on episodes
+  from a later period still. Same reason every split in this project is
+  chronological.
+- **Only strategies that completed the goal** are fed back. A strategy that
+  never moved the money is a failed attempt, not a discovered evasion.
+- **Fixed episodes and a fixed decode seed** for every comparison, so two cells of
+  the cross-play matrix differ because the *players* differ, never because of
+  the dice.
+- **A runtime check on the holdout.** It is fingerprinted before the run and
+  re-checked after; the run fails loudly if a single value changed.
+
+The phase gate checks that these guards work. It never asks the detector to win
+— who is ahead at the end is the finding, and a gate demanding a winner would be
+rigged in advance.
 """
     )

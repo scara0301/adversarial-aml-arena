@@ -11,17 +11,48 @@ def render() -> None:
     st.subheader("What this dashboard is (and isn't)")
     st.markdown(
         """
-This is an **explainer for Phases 1-2**, built ahead of Phase 3. It reads the
-static artifacts those two phases already produced
-(`reports/phase{1,2}_metrics.json`) and never retrains or re-evolves
-anything, except on **Try the Adversary Yourself**, which scores a genome
-you choose against the real trained detector live.
+This is an **explainer for Phases 1-3**. It reads the static artifacts those
+phases wrote (`reports/phase{1,2,3}_metrics.json`) and never retrains or
+re-evolves anything, except on **Try the Adversary Yourself**, which scores a
+genome you choose against the real round-0 detector live.
 
-There is no round-by-round arms-race curve here yet — that's Phase 3's
-closed-loop orchestrator, not built. This dashboard shows round 0 only: one
-detector, one evolved adversary, no retraining loop between them.
+It is not the final Phase 4 dashboard: there is no live feed (everything is a
+replay of a finished run), and no SHAP or decision-boundary view yet.
 """
     )
+
+    st.subheader("Limitations of the closed loop (Phase 3)")
+    with st.expander("The adversary can query the detector's exact scores"):
+        st.write(
+            "The GA scores every candidate through the detector's real probabilities "
+            "and its real alert threshold. A real launderer learns only whether a "
+            "transfer was frozen or not — a far weaker signal. So this adversary is "
+            "stronger than a realistic one, which makes the detector's numbers "
+            "conservative: a real attacker would find it harder to evade, not easier."
+        )
+    with st.expander("One run, one seed per setting"):
+        st.write(
+            "The arms-race curve comes from a single run. The GA is stochastic, so a "
+            "difference of a few points between two rounds can be noise, and run-to-run "
+            "variance has not been measured. Large effects (the detector's recall against "
+            "a strategy jumping after it was shown that strategy) are well outside that "
+            "noise; small round-to-round wobbles are not evidence of anything."
+        )
+    with st.expander("Feedback is positive-only, and capped"):
+        st.write(
+            "Only the adversary's laundering operations are fed back — nothing is added "
+            "to teach the detector that similar-looking *benign* behaviour is fine. The "
+            "cap (20% of the original positives) and the always-retrain-from-the-original-"
+            "set rule limit how far that can drag the detector, and the clean-holdout "
+            "curve measures what it costs; but it is a real asymmetry."
+        )
+    with st.expander("The background world does not react"):
+        st.write(
+            "Benign customers behave identically in every round. In a real bank, "
+            "tightening detection changes legitimate behaviour too, and criminals "
+            "adapt on the scale of months, not generations. This is a model of an arms "
+            "race, not a forecast of one."
+        )
 
     st.subheader("Stated limitations, carried over from the project docs")
     with st.expander("You cannot plot a 74-dimensional decision boundary"):
@@ -38,27 +69,32 @@ detector, one evolved adversary, no retraining loop between them.
             "dataset (Phase 5) — likely down, given the true prevalence is "
             "~0.1% versus the 0.2% used here."
         )
+    with st.expander("The synthetic laundering is never a round number"):
+        st.write(
+            "21.6% of benign amounts are round multiples of $100; none of the laundering "
+            "is. So 'round' means 'benign' with certainty — a free shortcut the detector "
+            "learned (it was the #2 feature in Phase 1). Retraining without it costs about "
+            "3 points of recall and 2 of PR-AUC, so the Phase 1 numbers are roughly that "
+            "much optimistic. The first closed-loop run's adversary found the shortcut in "
+            "one round (a single round-number transfer; detector recall 0.000). Episode "
+            "goals are now drawn to the cent, which closes the adversary's access to it — "
+            "but the generator is unchanged, and fixing it is the first job before real data."
+        )
     with st.expander("PaySim will not transfer cleanly"):
         st.write(
             "Different schema, no comparable account graph or typology labels "
             "— the relational features will not carry over. Fallback: validate "
             "only the per-transaction feature subset."
         )
-    with st.expander("The adversary was evolved against one fixed detector"):
-        st.write(
-            "That's what Phase 2 asks for, but it makes the recall gap shown on "
-            "the Phase 2 page an *upper bound* on evasion. A detector retrained "
-            "on evolved strategies should be considerably harder to fool — the "
-            "entire point of the Phase 3 closed loop."
-        )
 
-    st.subheader("What Phase 3 needs from here")
+    st.subheader("What's next")
     st.markdown(
         """
-- The **diverse strategy pool** (8 mutually-distinct evolved genomes) to fold
-  back into the detector's training data.
-- The **naive → evolved recall gap** as round 0 of the arms-race curve.
-- `AccountGraph.overlay` and its ~5ms-per-candidate cost, which is what makes
-  re-evolving the adversary once per round affordable.
+- **Phase 5** — the real IBM AML dataset, and PaySim for the per-transaction
+  features only. The loader contract (`load_ledger("ibm", ...)`) is written;
+  it has never been run on real data.
+- **Phase 6** — the consolidated final report.
+- **Not yet built**: SHAP feature-importance drift between rounds, and the 2-D
+  projection with score contours.
 """
     )

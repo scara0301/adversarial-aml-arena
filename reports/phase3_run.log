@@ -1,0 +1,109 @@
+round-0 detector: C:\projs\MINI PROJ\artifacts\detector_r0.lgb
+loading ledger C:\projs\MINI PROJ\data\synthetic\ledger.parquet
+
+closed loop: 5 rounds, population 100, 40 generations, feedback cap 20%, warm start on
+background graph frozen: 20,000 accounts
+features built in 62s  (train 56,446 rows / 2,171 pos, valid 18,148 / 698, holdout 500,001 / 1,132)
+
+=== round 0 ===  D_0 holdout recall@budget 0.538  PR-AUC 0.454  tau 0.4705
+  gen   0  best=0.6332  mean=0.0516  completion=0.997  evasion=0.649  txns=6  diversity=0.392
+  gen   5  best=0.7920  mean=0.3803  completion=0.997  evasion=0.800  txns=2  diversity=0.350
+  gen  10  best=0.9065  mean=0.5153  completion=0.996  evasion=0.920  txns=8  diversity=0.335
+  gen  15  best=0.9065  mean=0.5794  completion=0.996  evasion=0.920  txns=8  diversity=0.310
+  gen  20  best=0.9649  mean=0.6052  completion=0.997  evasion=0.981  txns=7  diversity=0.305
+  gen  25  best=0.9649  mean=0.6777  completion=0.997  evasion=0.981  txns=7  diversity=0.287
+  gen  30  best=0.9649  mean=0.6550  completion=0.997  evasion=0.981  txns=7  diversity=0.305
+  gen  35  best=0.9649  mean=0.6819  completion=0.997  evasion=0.981  txns=7  diversity=0.306
+  gen  40  best=0.9649  mean=0.6896  completion=0.997  evasion=0.981  txns=7  diversity=0.306
+  A_0 champion vs D_0 on held-out episodes: detector recall 0.130  evasion 0.883  success rate 1.00  (GA best fitness 0.965, 6.3 min)
+  fed back 35 operations / 434 rows (20% of original positives, cap 20%) -> D_1 (231 trees)
+
+=== round 1 ===  D_1 holdout recall@budget 0.519  PR-AUC 0.437  tau 0.4355
+  gen   0  best=0.2652  mean=0.0360  completion=0.996  evasion=0.279  txns=11  diversity=0.416
+  gen   5  best=0.5309  mean=0.2392  completion=0.998  evasion=0.557  txns=7  diversity=0.364
+  gen  10  best=0.5717  mean=0.2515  completion=0.987  evasion=0.600  txns=2  diversity=0.348
+  gen  15  best=0.7984  mean=0.3053  completion=0.999  evasion=0.800  txns=2  diversity=0.347
+  gen  20  best=0.9857  mean=0.3094  completion=0.999  evasion=1.000  txns=2  diversity=0.342
+  gen  25  best=0.9943  mean=0.3738  completion=0.999  evasion=1.000  txns=2  diversity=0.317
+  gen  30  best=0.9989  mean=0.3971  completion=1.000  evasion=1.000  txns=1  diversity=0.316
+  gen  35  best=0.9989  mean=0.3943  completion=1.000  evasion=1.000  txns=1  diversity=0.310
+  gen  40  best=0.9989  mean=0.4351  completion=1.000  evasion=1.000  txns=1  diversity=0.313
+  A_1 champion vs D_1 on held-out episodes: detector recall 0.467  evasion 0.533  success rate 0.53  (GA best fitness 0.999, 5.4 min)
+  fed back 75 operations / 431 rows (20% of original positives, cap 20%) -> D_2 (225 trees)
+
+=== round 2 ===  D_2 holdout recall@budget 0.529  PR-AUC 0.441  tau 0.4381
+  gen   0  best=0.3982  mean=0.0374  completion=1.000  evasion=0.400  txns=1  diversity=0.430
+  gen   5  best=0.7970  mean=0.2634  completion=1.000  evasion=0.800  txns=1  diversity=0.344
+  gen  10  best=0.7970  mean=0.2656  completion=1.000  evasion=0.800  txns=1  diversity=0.332
+  gen  15  best=0.7970  mean=0.2774  completion=1.000  evasion=0.800  txns=1  diversity=0.349
+  gen  20  best=0.7970  mean=0.2876  completion=1.000  evasion=0.800  txns=1  diversity=0.324
+  gen  25  best=0.7970  mean=0.3078  completion=1.000  evasion=0.800  txns=1  diversity=0.341
+  gen  30  best=0.7970  mean=0.2834  completion=1.000  evasion=0.800  txns=1  diversity=0.346
+  gen  35  best=0.7997  mean=0.2996  completion=1.000  evasion=0.800  txns=1  diversity=0.352
+  gen  40  best=0.7997  mean=0.3338  completion=1.000  evasion=0.800  txns=1  diversity=0.314
+  A_2 champion vs D_2 on held-out episodes: detector recall 0.467  evasion 0.533  success rate 0.53  (GA best fitness 0.800, 4.5 min)
+  fed back 93 operations / 434 rows (20% of original positives, cap 20%) -> D_3 (247 trees)
+
+=== round 3 ===  D_3 holdout recall@budget 0.516  PR-AUC 0.427  tau 0.4536
+  gen   0  best=0.4254  mean=0.0564  completion=0.999  evasion=0.449  txns=7  diversity=0.426
+  gen   5  best=0.5995  mean=0.2589  completion=1.000  evasion=0.600  txns=1  diversity=0.357
+  gen  10  best=0.6797  mean=0.2506  completion=0.996  evasion=0.701  txns=2  diversity=0.327
+  gen  15  best=0.6797  mean=0.2622  completion=0.996  evasion=0.701  txns=2  diversity=0.313
+  gen  20  best=0.8000  mean=0.2352  completion=1.000  evasion=0.800  txns=1  diversity=0.348
+  gen  25  best=0.8000  mean=0.2291  completion=1.000  evasion=0.800  txns=1  diversity=0.337
+  gen  30  best=0.8000  mean=0.2728  completion=1.000  evasion=0.800  txns=1  diversity=0.344
+  gen  35  best=0.8000  mean=0.2524  completion=1.000  evasion=0.800  txns=1  diversity=0.353
+  gen  40  best=0.8000  mean=0.2401  completion=1.000  evasion=0.800  txns=1  diversity=0.356
+  A_3 champion vs D_3 on held-out episodes: detector recall 0.533  evasion 0.467  success rate 0.47  (GA best fitness 0.800, 4.7 min)
+  fed back 127 operations / 434 rows (20% of original positives, cap 20%) -> D_4 (243 trees)
+
+=== round 4 ===  D_4 holdout recall@budget 0.523  PR-AUC 0.430  tau 0.4574
+  gen   0  best=0.4418  mean=0.0662  completion=0.997  evasion=0.460  txns=8  diversity=0.448
+  gen   5  best=0.6259  mean=0.2584  completion=1.000  evasion=0.644  txns=12  diversity=0.320
+  gen  10  best=0.6259  mean=0.2595  completion=1.000  evasion=0.644  txns=12  diversity=0.308
+  gen  15  best=0.6373  mean=0.2861  completion=0.999  evasion=0.662  txns=9  diversity=0.332
+  gen  20  best=0.6519  mean=0.2771  completion=0.999  evasion=0.671  txns=8  diversity=0.333
+  gen  25  best=0.6519  mean=0.2835  completion=0.999  evasion=0.671  txns=8  diversity=0.311
+  gen  30  best=0.6519  mean=0.2690  completion=0.999  evasion=0.671  txns=8  diversity=0.320
+  gen  35  best=0.6519  mean=0.3129  completion=0.999  evasion=0.671  txns=8  diversity=0.318
+  gen  40  best=0.6519  mean=0.2847  completion=0.999  evasion=0.671  txns=8  diversity=0.334
+  A_4 champion vs D_4 on held-out episodes: detector recall 0.534  evasion 0.520  success rate 0.63  (GA best fitness 0.652, 4.6 min)
+  fed back 107 operations / 434 rows (20% of original positives, cap 20%) -> D_5 (247 trees)
+  note: 1 decoded operation(s) ran past the training period and were dropped whole rather than leak into the validation period
+
+D_5 (final, no adversary evolved against it): holdout recall@budget 0.509  PR-AUC 0.421
+
+==============================================================================
+ARMS-RACE SUMMARY
+==============================================================================
+round | holdout recall  PR-AUC | D_r vs A_r  success | vs naive vs random
+    0 |          0.538   0.454 |      0.130     1.00 |    0.578     0.608
+    1 |          0.519   0.437 |      0.467     0.53 |    0.756     0.671
+    2 |          0.529   0.441 |      0.467     0.53 |    0.722     0.672
+    3 |          0.516   0.427 |      0.533     0.47 |    0.733     0.672
+    4 |          0.523   0.430 |      0.534     0.63 |    0.800     0.663
+    5 |          0.509   0.421 |        nan      nan |    0.744     0.673
+
+cross-play: detector recall, rows D_i, columns A_j
+          A_0    A_1    A_2    A_3    A_4
+  D_0    0.13   0.30   0.33   0.30   0.20
+  D_1    0.69   0.47   0.20   0.43   0.51
+  D_2    0.67   0.47   0.47   0.47   0.45
+  D_3    0.60   0.50   0.57   0.53   0.54
+  D_4    0.60   0.73   0.63   0.67   0.53
+  D_5    0.56   0.67   0.60   0.70   0.57
+
+wrote C:\projs\MINI PROJ\reports\phase3_metrics.json
+wrote phase3_arms_race.png, phase3_crossplay.png, phase3_typology_recall.png, phase3_gene_drift.png
+detectors saved to C:\projs\MINI PROJ\artifacts\arena   (244.5 CPU-min, 28.9 min wall-clock -- wall time includes any time the machine slept)
+
+Phase 3 gate
+  [PASS] no holdout collapse (largest drop vs round 0 <= 0.10)
+         largest drop +0.029  (round 0 0.538, min 0.509)
+  [PASS] feedback reaches the detector (mean recall gain on the strategy it was shown > 0.10)
+         mean gain +0.165  per round [0.558, 0.0, 0.1, 0.133, 0.034]
+  [PASS] alert budget held every round (invariant 3)
+         worst |flag rate - budget| = 0.00000
+
+Phase 3 gate: PASS
+EXIT 0

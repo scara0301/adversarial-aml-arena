@@ -1,54 +1,55 @@
 loading detector C:\projs\MINI PROJ\artifacts\detector_r0.lgb
   205 trees, 74 features
 loading ledger C:\projs\MINI PROJ\data\synthetic\ledger.parquet
-  froze background graph: 20,000 accounts, 2,000,001 rows, 10.4s
-  threshold at a 0.50% alert budget: tau = 0.470622
+  froze background graph: 20,000 accounts, 2,000,001 rows, 12.1s
+  threshold at a 0.50% alert budget: tau = 0.469972
 
 evolving: population 100, 40 generations, 5 episodes per evaluation (~20,500 candidate evaluations)
   goal: move $250,000 within 336h; completion floor 0.95
-  gen   0  best=0.2756  mean=0.0289  completion=0.997  evasion=0.294  txns=9  diversity=0.392
-  gen   5  best=0.8028  mean=0.3563  completion=0.997  evasion=0.816  txns=16  diversity=0.368
-  gen  10  best=0.8866  mean=0.5448  completion=0.997  evasion=0.890  txns=16  diversity=0.343
-  gen  15  best=0.8911  mean=0.6331  completion=0.997  evasion=0.904  txns=15  diversity=0.346
-  gen  20  best=0.8911  mean=0.6608  completion=0.997  evasion=0.904  txns=15  diversity=0.359
-  gen  25  best=0.8946  mean=0.6519  completion=0.998  evasion=0.897  txns=16  diversity=0.355
-  gen  30  best=0.8946  mean=0.6463  completion=0.998  evasion=0.897  txns=16  diversity=0.359
-  gen  35  best=0.9039  mean=0.6793  completion=0.998  evasion=0.906  txns=13  diversity=0.377
-  gen  40  best=0.9039  mean=0.6988  completion=0.998  evasion=0.906  txns=13  diversity=0.366
-  done in 5.0 min
+  gen   0  best=0.3180  mean=0.0290  completion=0.997  evasion=0.326  txns=43  diversity=0.392
+  gen   5  best=0.8072  mean=0.3781  completion=0.997  evasion=0.820  txns=16  diversity=0.354
+  gen  10  best=0.9059  mean=0.6054  completion=0.998  evasion=0.917  txns=14  diversity=0.346
+  gen  15  best=0.9059  mean=0.6162  completion=0.998  evasion=0.917  txns=14  diversity=0.319
+  gen  20  best=0.9059  mean=0.6802  completion=0.998  evasion=0.917  txns=14  diversity=0.312
+  gen  25  best=0.9059  mean=0.6798  completion=0.998  evasion=0.917  txns=14  diversity=0.350
+  gen  30  best=0.9059  mean=0.6727  completion=0.998  evasion=0.917  txns=14  diversity=0.342
+  gen  35  best=0.9107  mean=0.6927  completion=0.998  evasion=0.913  txns=13  diversity=0.357
+  gen  40  best=0.9107  mean=0.7073  completion=0.998  evasion=0.913  txns=13  diversity=0.358
+  done in 6.4 min
 
 re-scoring strategies on 20 fresh episodes
 
 Detector recall on adversary transactions
 ------------------------------------------
-  naive (hand-written)      0.7667
-  random (unevolved mean)   0.7548
-  evolved (GA best)         0.2466
+  naive (hand-written)      0.7500
+  random (unevolved mean)   0.7481
+  evolved (GA best)         0.2308
 
-  naive fitness            0.2318  (completion 0.998, evasion 0.232)
-  random fitness           0.0013
-  evolved fitness          0.7669  (completion 0.998, evasion 0.769)
+  naive fitness            0.2601  (completion 0.999, evasion 0.261)
+  random fitness           0.0022
+  evolved fitness          0.7714  (completion 0.999, evasion 0.773)
 
 best evolved strategy
   template            stack
   routing hops        1
-  tranches per leg    6
-  tranche skew        0.212
-  threshold hug       0.678
+  tranches per leg    8
+  tranche skew        0.022
+  threshold hug       0.675
   mean delay          0.0 h
-  delay jitter        0.791
-  business-hours bias 0.890
-  mule pool           2
-  mule reuse          0.755
-  format mix          0.000
-  hop dormancy        86.5 h
+  delay jitter        0.126
+  business-hours bias 0.171
+  mule pool           6
+  mule reuse          0.588
+  format mix          0.039
+  hop dormancy        26.0 h
 
 wrote C:\projs\MINI PROJ\reports\phase2_metrics.json
 wrote C:\projs\MINI PROJ\reports\phase2_best_strategy_example.csv  (13 transactions)
 wrote figures -> C:\projs\MINI PROJ\reports/phase2_*.png
 
 Phase 2 gate (fitness improved, recall gap > 0.15, completion >= floor): PASS
-  best fitness 0.2756 -> 0.9039
-  mean fitness 0.0289 -> 0.6988
-  recall gap 0.5200
-  evolved completion 0.9980
+  best fitness 0.3180 -> 0.9107
+  mean fitness 0.0290 -> 0.7073
+  recall gap 0.5192
+  evolved completion 0.9992
+EXIT 0

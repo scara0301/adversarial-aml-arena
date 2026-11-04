@@ -45,7 +45,7 @@ _BENIGN_FORMAT_P = np.array([0.30, 0.20, 0.22, 0.06, 0.12, 0.08, 0.02])
 # so the distributions have to overlap heavily.
 _LAUNDER_FORMAT_P = np.array([0.28, 0.14, 0.10, 0.05, 0.24, 0.14, 0.05])
 
-_CURRENCY_P = np.array([0.55, 0.20, 0.13, 0.10, 0.02])
+CURRENCY_P = np.array([0.55, 0.20, 0.13, 0.10, 0.02])
 
 _TYPOLOGY_CYCLE = ("fan-out", "fan-in", "cycle", "gather-scatter", "stack")
 
@@ -86,7 +86,7 @@ def _hour_of_day(rng: np.random.Generator, n: int, p_business: float = 0.90) -> 
     return np.clip(hour, 0, 23.999)
 
 
-def _fx_legs(
+def fx_legs(
     rng: np.random.Generator, amounts: np.ndarray, cur_idx: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Receiving currency and received amount, from one shared process.
@@ -178,9 +178,9 @@ def _make_background(
     hours = _business_hour_offsets(rng, rows, days)
     amounts = _benign_amounts(rng, rows)
     fmt_idx = rng.choice(len(PAYMENT_FORMATS), size=rows, p=_BENIGN_FORMAT_P)
-    cur_idx = rng.choice(len(CURRENCIES), size=rows, p=_CURRENCY_P)
+    cur_idx = rng.choice(len(CURRENCIES), size=rows, p=CURRENCY_P)
 
-    cur, recv_cur, recv_amt = _fx_legs(rng, amounts, cur_idx)
+    cur, recv_cur, recv_amt = fx_legs(rng, amounts, cur_idx)
 
     return pd.DataFrame(
         {
@@ -252,8 +252,8 @@ def _launder_rows(
     offsets = day_offset * 24.0 + _hour_of_day(rng, n, p_business=0.72)
 
     fmt_idx = rng.choice(len(PAYMENT_FORMATS), size=n, p=_LAUNDER_FORMAT_P)
-    cur_idx = rng.choice(len(CURRENCIES), size=n, p=_CURRENCY_P)
-    cur, recv_cur, recv_amt = _fx_legs(rng, amt, cur_idx)
+    cur_idx = rng.choice(len(CURRENCIES), size=n, p=CURRENCY_P)
+    cur, recv_cur, recv_amt = fx_legs(rng, amt, cur_idx)
 
     return pd.DataFrame(
         {

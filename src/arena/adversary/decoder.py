@@ -50,12 +50,26 @@ import pandas as pd
 from arena import schema
 from arena.adversary.genome import TEMPLATES, decode_genes
 from arena.features.account_graph import to_hours
+from arena.data.synthetic import CURRENCY_P, fx_legs
 from arena.schema import CURRENCIES, PAYMENT_FORMATS, REPORTING_THRESHOLD
 
-#: Proportional fee charged at each hop. Models the real friction of moving
-#: money through mules, and gives ``n_hops`` a genuine cost so the GA cannot
-#: add layers for free.
-DEFAULT_FEE_RATE = 0.002
+#: Extra proportional fee charged at each hop, on top of the FX spread. Zero by
+#: default, and it should stay zero.
+#:
+#: This used to be 0.002, and that was a fingerprint. Every decoded transaction
+#: then carried ``amount_received = amount_paid * 0.998`` and a USD-to-USD
+#: currency pair, so ``fx_loss`` was exactly 0.002 on every adversary row, while
+#: benign traffic has 0 (93% of rows) or a spread between 0.5% and 3%. A detector
+#: retrained on decoded rows could then learn "fx_loss == 0.002" -- which says
+#: nothing about evasion. It did: measured on the first closed-loop run, a quarter
+#: of the retrained detector's apparent catch rate was that fingerprint alone, and
+#: it leaned on ``fx_loss`` ten times harder than the round-0 detector had.
+#:
+#: The cost of moving money through mules is now realised by the same FX process
+#: benign and background-laundering rows use (``arena.data.synthetic.fx_legs``),
+#: so an adversary row's currency fields are drawn from the same distribution as
+#: everyone else's. A non-zero fee here reintroduces a constant nobody else has.
+DEFAULT_FEE_RATE = 0.0
 
 #: Smallest plausible tranche. Nobody launders $3, and without a floor the GA
 #: shreds the goal into thousands of trivial transfers that no single detector
@@ -293,6 +307,10 @@ def decode(
             tranches = _tranche_amounts(
                 balance, int(p["n_splits"]), float(p["split_skew"]), float(p["threshold_hug"]), rng
             )
+            # Currency and FX come from the process every other row uses -- see
+            # DEFAULT_FEE_RATE. One batched draw per sender keeps this cheap.
+            cur_idx = rng.choice(len(CURRENCIES), size=len(tranches), p=CURRENCY_P)
+            pay_cur, recv_cur, recv_amt = fx_legs(rng, tranches, cur_idx)
 
             # Money sits at each hop before moving on: the dormancy gene.
             t = clock.get(sender, float(episode.start_hour)) + dormancy * (hop > 0)
@@ -331,9 +349,8 @@ def decode(
                 if previous is not None and t < previous + MIN_GAP_HOURS:
                     t = previous + MIN_GAP_HOURS
 
-                received = amount * (1.0 - fee_rate)
+                received = float(recv_amt[j]) * (1.0 - fee_rate)
                 fmt = _pick_format(float(p["format_mix"]), rng)
-                cur = CURRENCIES[0]
 
                 records.append(
                     {
@@ -343,9 +360,9 @@ def decode(
                         "to_bank": episode.bank(receiver),
                         "to_account": receiver,
                         "amount_paid": float(amount),
-                        "payment_currency": cur,
+                        "payment_currency": str(pay_cur[j]),
                         "amount_received": float(received),
-                        "receiving_currency": cur,
+                        "receiving_currency": str(recv_cur[j]),
                         "payment_format": fmt,
                         "is_laundering": 1,
                         "typology": template,
@@ -376,6 +393,8 @@ def decode(
     if template == "cycle" and records and len(records) < MAX_TRANSACTIONS:
         sender = episode.dst_account
         token = max(MIN_TRANCHE, float(episode.amount_goal) * 0.001)
+        t_cur_idx = rng.choice(len(CURRENCIES), size=1, p=CURRENCY_P)
+        t_cur, t_recv_cur, t_recv = fx_legs(rng, np.array([token]), t_cur_idx)
         t = clock.get(sender, float(episode.start_hour)) + max(dormancy, 1.0)
         records.append(
             {
@@ -385,9 +404,9 @@ def decode(
                 "to_bank": episode.bank(episode.src_account),
                 "to_account": episode.src_account,
                 "amount_paid": token,
-                "payment_currency": CURRENCIES[0],
-                "amount_received": token * (1.0 - fee_rate),
-                "receiving_currency": CURRENCIES[0],
+                "payment_currency": str(t_cur[0]),
+                "amount_received": float(t_recv[0]) * (1.0 - fee_rate),
+                "receiving_currency": str(t_recv_cur[0]),
                 "payment_format": _pick_format(float(p["format_mix"]), rng),
                 "is_laundering": 1,
                 "typology": "cycle",

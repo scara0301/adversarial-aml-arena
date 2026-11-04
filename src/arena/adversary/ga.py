@@ -203,6 +203,7 @@ def evolve(
     deadline_hours: float = 336.0,
     epoch: pd.Timestamp | None = None,
     progress: bool = True,
+    seed_genomes: list[np.ndarray] | None = None,
 ) -> tuple[np.ndarray, list[GenerationRecord], list]:
     """Run the GA and return the best genome, the per-generation log, and the
     final population.
@@ -210,6 +211,12 @@ def evolve(
     The final population is returned, not just the winner, because Phase 3 needs
     a diverse set of evasive strategies to fold back into the detector's
     training data. One strategy would teach the detector one lesson.
+
+    ``seed_genomes`` warm-starts the run: they replace the first few random
+    individuals of the initial population. This is how the adversary is
+    *self-improving* across arms-race rounds rather than amnesiac -- it carries
+    last round's strategies into the new fight. The rest of the population stays
+    random, so seeding cannot collapse diversity.
     """
     if epoch is None:
         epoch = detector.epoch
@@ -219,6 +226,8 @@ def evolve(
     )
 
     population = toolbox.population(n=cfg.population)
+    for slot, genome in zip(population, seed_genomes or []):
+        slot[:] = repair_genome(np.asarray(genome, dtype=np.float64)).tolist()
     history: list[GenerationRecord] = []
 
     for gen in range(cfg.generations + 1):
@@ -294,17 +303,27 @@ def evolve(
     return best_genome, history, population
 
 
-def distinct_top(population: list, k: int, min_distance: float = SIGMA_SHARE) -> list[np.ndarray]:
+def distinct_top(
+    population: list, k: int, min_distance: float = SIGMA_SHARE, min_fitness: float = 0.0
+) -> list[np.ndarray]:
     """The ``k`` best genomes that are mutually at least ``min_distance`` apart.
 
     Phase 3 feeds these back into the detector's training set. Taking the top-k
     by fitness alone would usually return k near-identical genomes -- the GA
     converges -- and retraining on k copies of one strategy teaches the detector
     almost nothing. Enforcing separation is what makes the feedback informative.
+
+    Only genomes with fitness strictly above ``min_fitness`` qualify. Fitness 0
+    means the strategy never completed the laundering goal; it is not an evasion
+    strategy that was *discovered*, it is a failed attempt, and handing failed
+    attempts to the detector as positives would teach it noise. The result may
+    therefore be shorter than ``k`` -- or empty.
     """
     ordered = sorted(population, key=lambda i: -i.fitness.values[0])
     chosen: list[np.ndarray] = []
     for ind in ordered:
+        if ind.fitness.values[0] <= min_fitness:
+            break  # sorted descending: nothing after this can qualify either
         g = np.asarray(ind, dtype=np.float64)
         if all(distance(g, other) >= min_distance for other in chosen):
             chosen.append(g)

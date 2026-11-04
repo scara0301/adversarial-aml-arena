@@ -71,13 +71,13 @@ that predicts "never laundering" scores {1 - h['positive_rate']:.1%}. Instead:
             height=320,
             margin=dict(l=10, r=10, t=10, b=10),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     with right:
         st.subheader("Precision-recall curve")
         img = data.report_image("phase1_pr_curve.png")
         if img:
-            st.image(img, use_container_width=True)
+            st.image(img, width="stretch")
         else:
             st.caption("Figure not generated yet.")
 
@@ -100,7 +100,7 @@ that predicts "never laundering" scores {1 - h['positive_rate']:.1%}. Instead:
     fig2.update_layout(
         xaxis_title="gain", height=420, margin=dict(l=10, r=10, t=10, b=10)
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
     with st.expander("Run details"):
         st.json(

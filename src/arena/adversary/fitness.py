@@ -251,21 +251,62 @@ class EpisodeSampler:
         self,
         n: int,
         rng: np.random.Generator,
-        amount_goal: float,
+        amount_goal: float | tuple[float, float],
         deadline_hours: float,
         mule_pool_size: int = 12,
+        start_range: tuple[float, float] | None = None,
     ) -> list[Episode]:
+        """Draw ``n`` independent episodes.
+
+        ``start_range`` overrides the default start-time window (hours since the
+        epoch). Phase 3 uses it to draw training, validation and evaluation
+        episodes from *different* periods of the ledger, so that the adversary
+        data the detector learns from and the adversary data it is judged on
+        never overlap in time -- the same reason every split in this project is
+        chronological.
+
+        ``amount_goal`` is either one fixed amount (Phase 2) or a ``(low, high)``
+        range, from which each episode draws its own goal log-uniformly, to the
+        cent. Phase 3 needs the range, for two reasons the first closed-loop run
+        exposed:
+
+        * **A fixed goal is a round number.** With one tranche the decoder sends
+          exactly the goal, so a constant $250,000.00 handed the GA a free
+          evasion: the generator's laundering is never round while 21.6% of benign
+          traffic is, so the detector had learned "round means benign". The GA
+          found it in round 1 (detector recall 0.000).
+        * **A fixed goal is a constant the retrained detector can memorise.** If
+          every adversary operation moves the same total, the volume features
+          encode it, and "recall on held-out episodes" partly measures having
+          memorised a number rather than having learned a strategy.
+        """
+        if isinstance(amount_goal, tuple):
+            goal_lo, goal_hi = amount_goal
+            if not 0 < goal_lo < goal_hi:
+                raise ValueError(f"amount_goal range must satisfy 0 < low < high, got {amount_goal}")
+        else:
+            goal_lo = goal_hi = None
+        lo, hi = start_range if start_range is not None else (self.lo, self.hi)
+        if hi <= lo:
+            raise ValueError(
+                f"empty episode window [{lo:.1f}h, {hi:.1f}h]: the period is shorter than "
+                "the episode deadline, so no episode can start in it and still finish"
+            )
         episodes: list[Episode] = []
         for _ in range(n):
             picked = rng.choice(len(self.accounts), size=mule_pool_size + 2, replace=False)
             chosen = [str(self.accounts[i]) for i in picked]
+            goal = (
+                float(amount_goal) if goal_lo is None
+                else round(float(np.exp(rng.uniform(np.log(goal_lo), np.log(goal_hi)))), 2)
+            )
             episodes.append(
                 Episode(
                     src_account=chosen[0],
                     dst_account=chosen[1],
-                    amount_goal=amount_goal,
+                    amount_goal=goal,
                     deadline_hours=deadline_hours,
-                    start_hour=float(rng.uniform(self.lo, self.hi)),
+                    start_hour=float(rng.uniform(lo, hi)),
                     mule_pool=chosen[2:],
                     bank_of=self.bank_of,
                     epoch=self.epoch,

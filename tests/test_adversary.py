@@ -191,6 +191,38 @@ def test_no_account_sends_twice_at_the_same_instant(episode):
             )
 
 
+def test_adversary_rows_carry_no_currency_or_fx_fingerprint(episode):
+    """Regression guard for a fingerprint the first closed-loop run exposed.
+
+    The decoder used to charge a fixed 0.2% fee and always pay in USD, so every
+    adversary row had ``fx_loss`` of exactly 0.002 while benign traffic has 0 (93%
+    of rows) or a 0.5-3% spread. A detector retrained on decoded rows learned that
+    constant instead of the strategy -- about a quarter of its apparent catch rate
+    on the round-1 adversary, and it leaned on ``fx_loss`` ten times harder than the
+    round-0 detector. Currency and FX now come from the same shared process every
+    other row uses, so these distributions must match the background's.
+    """
+    rows = []
+    for i in range(300):
+        sub = decode(random_genome(np.random.default_rng(i)), episode, np.random.default_rng(i))
+        if not sub.empty:
+            rows.append(sub)
+    sub = pd.concat(rows, ignore_index=True)
+    assert len(sub) > 2000
+
+    fx = 1.0 - sub["amount_received"] / sub["amount_paid"]
+    zero = float((fx.abs() < 1e-9).mean())
+    assert 0.88 < zero < 0.97, f"{zero:.1%} of adversary rows have zero FX loss; background has ~93%"
+
+    nonzero = fx[fx.abs() > 1e-9].round(6)
+    assert nonzero.value_counts(normalize=True).iloc[0] < 0.05, "a single FX-loss value dominates"
+    assert nonzero.min() > 0.0049 and nonzero.max() < 0.0301, "spread outside the shared process's range"
+
+    cross = float((sub["payment_currency"].astype(str) != sub["receiving_currency"].astype(str)).mean())
+    assert 0.04 < cross < 0.10, f"cross-currency rate {cross:.1%}; background is ~7%"
+    assert sub["payment_currency"].astype(str).nunique() >= 4, "adversary rows must not all share one currency"
+
+
 def test_decoder_is_deterministic_given_a_seed(episode):
     genome = random_genome(np.random.default_rng(11))
     a = decode(genome, episode, np.random.default_rng(4))

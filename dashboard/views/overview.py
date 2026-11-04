@@ -44,7 +44,7 @@ PHASES = [
     ("0", "Scaffold, canonical schema, config", "✅ done"),
     ("1", "Synthetic data, feature pipeline, LightGBM detector", "✅ done"),
     ("2", "GA adversary: genome, decoder, constraints, fitness", "✅ done"),
-    ("3", "Closed-loop arena: retraining, arms-race curve", "⬜ not started"),
+    ("3", "Closed-loop arena: retraining, arms-race curve", "✅ done"),
     ("4", "Streamlit + Plotly dashboard", "🚧 this prototype"),
     ("5", "Real IBM AML data, PaySim cross-validation", "⬜ not started"),
     ("6", "Final consolidated report", "⬜ not started"),
@@ -90,6 +90,19 @@ evade it — and is still improving?**
             "strategy — while the strategy still delivers essentially the full amount. "
             "See **Phase 2 — The Adversary** for how it got there."
         )
+        p3 = data.phase3_metrics()
+        if p3:
+            own = [a["champion_vs_own"] for a in p3["adversaries"]]
+            st.markdown(
+                f"**And with the loop closed** ({len(own)} rounds of retraining on the adversary's "
+                f"own strategies): detector recall against the adversary built to beat it rises from "
+                f"{own[0]['detector_recall']:.0%} to {own[-1]['detector_recall']:.0%}, and the "
+                f"adversary's success rate falls from {own[0]['success_rate']:.0%} to "
+                f"{own[-1]['success_rate']:.0%} — but the adversary still wins most episodes. "
+                "The detector gains ground every round and never gets ahead. See "
+                "**Phase 3 — The Arms Race**, including the three flaws the experiment found "
+                "in itself on the way."
+            )
     else:
         st.warning(
             "No results yet. Run these first:\n\n"

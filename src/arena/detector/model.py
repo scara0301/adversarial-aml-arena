@@ -244,8 +244,6 @@ def train(
         The trained detector, and the feature frames keyed by split name (kept
         so callers can evaluate without re-featurizing).
     """
-    cfg = {**DEFAULT_PARAMS, **(params or {})}
-
     # Downsample the rows we train on, but featurize them against the full
     # graph the caller passed. The graph is never downsampled -- see
     # downsample_negatives.
@@ -260,15 +258,45 @@ def train(
     y_train = train_rows["is_laundering"].to_numpy(dtype=int)
     y_valid = valid_rows["is_laundering"].to_numpy(dtype=int)
 
-    n_pos = max(int((y_train == 1).sum()), 1)
-    n_neg = int((y_train == 0).sum())
-    cfg["scale_pos_weight"] = n_neg / n_pos
-
     weights = (
         train_rows[sample_weight_col].to_numpy(dtype=float)
         if sample_weight_col and sample_weight_col in train_rows.columns
         else None
     )
+
+    detector = fit_detector(
+        X_train, y_train, X_valid, y_valid,
+        window_hours=window_hours, epoch=graph.epoch, params=params, weights=weights,
+    )
+    return detector, {"train": X_train, "valid": X_valid}
+
+
+def fit_detector(
+    X_train: pd.DataFrame,
+    y_train: np.ndarray,
+    X_valid: pd.DataFrame,
+    y_valid: np.ndarray,
+    *,
+    window_hours: tuple[float, ...],
+    epoch: pd.Timestamp,
+    params: dict | None = None,
+    weights: np.ndarray | None = None,
+) -> Detector:
+    """Fit a detector on pre-built feature matrices.
+
+    Split out of :func:`train` for Phase 3. The closed loop retrains the
+    detector every round on the original training rows *plus* adversary rows,
+    and the adversary rows are featurized through the graph overlay (the same
+    path the GA scores them by) rather than through the batch path ``train``
+    uses. Building the matrices is therefore the caller's job; the fitting
+    policy -- imbalance weighting, PR-AUC early stopping -- stays in exactly
+    one place, so round 0 and round N are trained by identical code.
+    """
+    cfg = {**DEFAULT_PARAMS, **(params or {})}
+
+    n_pos = max(int((y_train == 1).sum()), 1)
+    n_neg = int((y_train == 0).sum())
+    cfg["scale_pos_weight"] = n_neg / n_pos
 
     clf = lgb.LGBMClassifier(**cfg)
     fit_kwargs = {}
@@ -291,11 +319,10 @@ def train(
 
     clf.fit(X_train, y_train, sample_weight=weights, **fit_kwargs)
 
-    detector = Detector(
+    return Detector(
         booster=clf.booster_,
         features=list(X_train.columns),
         window_hours=window_hours,
-        epoch=graph.epoch,
+        epoch=epoch,
         params=cfg,
     )
-    return detector, {"train": X_train, "valid": X_valid}

@@ -50,7 +50,7 @@ def render() -> None:
     _render_sliders()
     st.divider()
 
-    if st.button("🚀 Decode & Score", type="primary", use_container_width=True):
+    if st.button("🚀 Decode & Score", type="primary", width="stretch"):
         genome = _current_genome()
         with st.spinner("Decoding and scoring against the trained detector..."):
             outcome, sub, scores, tau = live.score_genome(genome)
@@ -62,12 +62,12 @@ def render() -> None:
 def _render_presets() -> None:
     c1, c2, c3 = st.columns(3)
     if c1.button(
-        "Load naive baseline", use_container_width=True,
+        "Load naive baseline", width="stretch",
         help="The hand-written strategy the evolved one is measured against.",
     ):
         _apply_preset(naive_genome())
     if c2.button(
-        "Load GA winner", use_container_width=True,
+        "Load GA winner", width="stretch",
         help="The best genome the Phase 2 evolutionary run found.",
     ):
         m = data.phase2_metrics()
@@ -76,7 +76,7 @@ def _render_presets() -> None:
             _apply_preset(np.array([best[g.name] for g in GENES], dtype=float))
         else:
             st.error("Run scripts/evolve_adversary.py first to get a winner to load.")
-    if c3.button("Randomize", use_container_width=True):
+    if c3.button("Randomize", width="stretch"):
         rng = np.random.default_rng()
         lo = np.array([g.low for g in GENES])
         hi = np.array([g.high for g in GENES])
@@ -182,13 +182,13 @@ def _render_result(outcome, sub, scores: np.ndarray, tau: float) -> None:
         xaxis_title="time", yaxis_title="amount ($)",
         height=340, margin=dict(l=10, r=10, t=10, b=10),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     st.caption("🔴 flagged by the detector &nbsp;&nbsp; 🟢 passed through unnoticed")
 
     table = sub[["timestamp", "from_account", "to_account", "amount_paid", "payment_format"]].copy()
     table["detector_score"] = scores.round(4)
     table["flagged"] = flagged
-    st.dataframe(table, hide_index=True, use_container_width=True)
+    st.dataframe(table, hide_index=True, width="stretch")
 
     if outcome.completion < 0.95:
         st.warning(

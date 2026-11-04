@@ -91,6 +91,41 @@ The pattern in all three fixes is the same and worth stating: the leak was close
 classes share a single code path, so the artefact becomes structurally impossible rather than
 merely corrected. That is the same reasoning behind having exactly one `featurize()`.
 
+## A fourth artefact, found later: round amounts
+
+**Added during Phase 3.** It was missed here, and it is worth saying how: `amount_mod_100` is the
+*second*-ranked feature in `reports/phase1_feature_importance.png`, and I read it as the
+"round-number structuring signal" it was named for instead of asking why a feature that cheap was
+doing so much work.
+
+Benign amounts are rounded to a multiple of $100 or more 21.6% of the time (`_benign_amounts`
+deliberately models people sending $500, not $487.33). Laundering tranches come out of a Dirichlet
+split and are continuous: **0.00% of laundering amounts are round**. So "this amount is round"
+means "this is benign" with certainty — a free, one-sided tell that removes a fifth of all benign
+traffic from the alert queue. Real laundering is often round (that is half of what structuring
+*is*), so a detector trained on real data would not have this shortcut.
+
+**How much did it inflate Phase 1?** Retraining without `amount_mod_100`, `amount_mod_1000` and
+`is_round_100`, on the same split, with the same settings:
+
+| | recall @ 0.5% budget | PR-AUC | precision @ budget |
+|---|---|---|---|
+| full feature set | 0.548 | 0.452 | 0.248 |
+| without roundness features | 0.516 | 0.432 | 0.234 |
+
+About **3 points of recall and 2 of PR-AUC** — real, but modest, so the headline numbers above are
+not invalidated; read them as roughly that much optimistic. (This retrain's "full" row is 0.548
+against the 0.537 reported above, so run-to-run variation of about a point exists and has not been
+measured; the gap between the rows is larger than that.)
+
+**Where it mattered was Phase 3.** The first closed-loop run's adversary, in round 1, reached
+detector recall 0.000 by sending one $250,000.00 transfer: with a single tranche the decoder sends
+exactly the episode goal, and every episode had the identical, round, goal. See
+[phase3.md](phase3.md). The generator was *not* changed in response — doing so means regenerating
+the ledger and re-running Phases 1-3 — so this artefact is still present, and is the first thing to
+fix before the real-data work in Phase 5. Phase 3 closes the adversary's *access* to it (each
+episode draws a continuous goal) rather than the artefact itself.
+
 ## Design decisions
 
 ### The shared feature pipeline (invariant 1)

@@ -34,6 +34,7 @@ from dashboard.views import (  # noqa: E402
     overview,
     phase1_detector,
     phase2_adversary,
+    phase3_arms_race,
     try_it,
 )
 
@@ -43,6 +44,7 @@ PAGES = {
     "🏠 Overview": overview.render,
     "🛡️ Phase 1 — The Detector": phase1_detector.render,
     "🧬 Phase 2 — The Adversary": phase2_adversary.render,
+    "🥊 Phase 3 — The Arms Race": phase3_arms_race.render,
     "🧪 Try the Adversary Yourself": try_it.render,
     "⚙️ How It Works": how_it_works.render,
     "⚠️ Limitations & What's Next": limitations.render,
@@ -61,10 +63,11 @@ def main() -> None:
 def _render_sidebar_status() -> None:
     p1_ok = data.phase1_metrics() is not None
     p2_ok = data.phase2_metrics() is not None
+    p3_ok = data.phase3_metrics() is not None
     st.sidebar.markdown("**Phase status**")
     st.sidebar.markdown(f"- Phase 1 (detector): {'✅' if p1_ok else '⬜ not run'}")
     st.sidebar.markdown(f"- Phase 2 (adversary): {'✅' if p2_ok else '⬜ not run'}")
-    st.sidebar.markdown("- Phase 3 (closed loop): ⬜ not started")
+    st.sidebar.markdown(f"- Phase 3 (closed loop): {'✅' if p3_ok else '⬜ not run'}")
     st.sidebar.markdown("- Phase 4 (dashboard): 🚧 this prototype")
     if not (p1_ok and p2_ok):
         st.sidebar.warning(

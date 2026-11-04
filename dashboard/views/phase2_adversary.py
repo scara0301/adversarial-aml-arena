@@ -80,7 +80,7 @@ def render() -> None:
             margin=dict(l=10, r=10, t=10, b=10),
             legend=dict(orientation="h", y=1.15),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption(
             "Watch the **mean**, not the best — elitism carries a lucky early "
             f"genome forward unchanged, so best can plateau (here: "
@@ -97,7 +97,7 @@ def render() -> None:
         st.dataframe(
             {"parameter": list(fc.keys()), "value": list(fc.values())},
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
         )
         with st.expander("Why the guards?"):
             st.markdown(
@@ -125,7 +125,7 @@ def render() -> None:
         }
         for g in GENES
     ]
-    st.dataframe(comparison_rows, hide_index=True, use_container_width=True)
+    st.dataframe(comparison_rows, hide_index=True, width="stretch")
 
     c1, c2 = st.columns(2)
     with c1:
@@ -138,7 +138,7 @@ def render() -> None:
     with c2:
         img = data.report_image("phase2_recall_comparison.png")
         if img:
-            st.image(img, use_container_width=True)
+            st.image(img, width="stretch")
 
     st.divider()
     st.subheader("The winning strategy, decoded")
@@ -152,7 +152,7 @@ def render() -> None:
         st.dataframe(
             example[["timestamp", "from_account", "to_account", "amount_paid", "payment_format"]],
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
         )
 
         fig3 = go.Figure(
@@ -169,7 +169,7 @@ def render() -> None:
             xaxis_title="time", yaxis_title="amount ($)",
             height=320, margin=dict(l=10, r=10, t=10, b=10),
         )
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width="stretch")
         st.info(
             "Every transaction sits **above** the $10,000 threshold — the "
             "adversary chose *not* to structure fully, because full structuring "
@@ -187,5 +187,5 @@ def render() -> None:
             "the detector eight copies of one winner would teach it almost nothing."
         )
         st.dataframe(
-            metrics.get("diverse_strategies", []), hide_index=True, use_container_width=True
+            metrics.get("diverse_strategies", []), hide_index=True, width="stretch"
         )
