@@ -45,7 +45,7 @@ PHASES = [
     ("1", "Synthetic data, feature pipeline, LightGBM detector", "✅ done"),
     ("2", "GA adversary: genome, decoder, constraints, fitness", "✅ done"),
     ("3", "Closed-loop arena: retraining, arms-race curve", "✅ done"),
-    ("4", "Streamlit + Plotly dashboard", "🚧 this prototype"),
+    ("4", "Dashboard: flows, attribution drift, decision projection", "✅ done"),
     ("5", "Real IBM AML data, PaySim cross-validation", "⬜ not started"),
     ("6", "Final consolidated report", "⬜ not started"),
 ]

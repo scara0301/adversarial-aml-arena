@@ -16,3 +16,7 @@ artifacts/
 
 # oh-my-claudecode session state
 .omc/
+
+# Claude Code worktrees (other sessions) and graphify cache
+.claude/worktrees/
+graphify-out/cache/

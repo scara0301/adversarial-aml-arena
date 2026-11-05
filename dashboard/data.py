@@ -60,6 +60,11 @@ def phase3_metrics() -> dict | None:
     return load_json(str(cfg.path("paths.reports") / "phase3_metrics.json"))
 
 
+def phase4_explain() -> dict | None:
+    cfg = get_config()
+    return load_json(str(cfg.path("paths.reports") / "phase4_explain.json"))
+
+
 def phase2_example_strategy() -> pd.DataFrame | None:
     cfg = get_config()
     return load_csv(str(cfg.path("paths.reports") / "phase2_best_strategy_example.csv"))
