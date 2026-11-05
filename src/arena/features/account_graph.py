@@ -37,7 +37,7 @@ The one deliberate exception is the cycle index -- see :class:`CycleIndex`.
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import ChainMap, Counter
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -215,12 +215,18 @@ class CycleIndex:
         mutated in place after construction.
         """
         new = CycleIndex.__new__(CycleIndex)
-        new.out_adj = dict(self.out_adj)
-        new.in_adj = dict(self.in_adj)
-        new._two_hop = {}
+        # Layered, not copied: a ChainMap reads the touched accounts' new sets first
+        # and falls through to this index for the rest. Copying the dicts instead was
+        # O(accounts) per overlay -- invisible on the 20k-account synthetic graph,
+        # ~30 ms per candidate episode on IBM's 422k accounts.
+        out_new: dict[str, set[str]] = {}
+        in_new: dict[str, set[str]] = {}
         for f, t in zip(from_acc, to_acc):
-            new.out_adj[f] = set(new.out_adj.get(f, ())) | {t}
-            new.in_adj[t] = set(new.in_adj.get(t, ())) | {f}
+            out_new[f] = set(out_new.get(f, self.out_adj.get(f, ()))) | {t}
+            in_new[t] = set(in_new.get(t, self.in_adj.get(t, ()))) | {f}
+        new.out_adj = ChainMap(out_new, self.out_adj)
+        new.in_adj = ChainMap(in_new, self.in_adj)
+        new._two_hop = {}
         return new
 
     def two_hop_out(self, node: str) -> set[str]:
@@ -360,12 +366,12 @@ class AccountGraph:
             add_in[t][1].append(amt)
             add_in[t][2].append(f)
 
-        states = dict(self.states)  # shallow: untouched accounts shared
+        touched_states: dict[str, AccountState] = {}
         for acct in touched:
             base = self.states.get(acct, self._default)
             o_t, o_a, o_c = add_out[acct]
             i_t, i_a, i_c = add_in[acct]
-            states[acct] = _build_state(
+            touched_states[acct] = _build_state(
                 list(base.out_times) + o_t,
                 list(base.out_amounts) + o_a,
                 list(base.out_cps) + o_c,
@@ -374,6 +380,8 @@ class AccountGraph:
                 list(base.in_cps) + i_c,
             )
 
+        # Untouched accounts are read through to this graph, not copied (see CycleIndex.extended).
+        states = ChainMap(touched_states, self.states)
         return AccountGraph(states, self.cycles.extended(from_acc, to_acc), self.epoch)
 
     # ----------------------------------------------------------------- lookups

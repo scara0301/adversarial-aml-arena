@@ -45,6 +45,15 @@ uv run python scripts/reevaluate_arena.py --episodes 200
 ```
 
 ```bash
+uv run python scripts/build_explainability.py
+```
+
+Phase 5 needs the IBM files (`HI-Small_Trans.csv`, `HI-Small_Patterns.txt`, from Kaggle) in
+`data/raw/`, then the same scripts under the IBM overlay (`export ARENA_CONFIG=config/ibm.yaml`):
+`prepare_ibm.py`, `train_detector.py`, `evolve_adversary.py`, `run_arena.py`; and, without the overlay,
+`scripts/phase5_transfer.py`. See [docs/phase5.md](docs/phase5.md).
+
+```bash
 uv run pytest -q
 ```
 
@@ -55,24 +64,25 @@ confidence intervals, without re-running any search. Each writes metrics and fig
 
 ## Dashboard
 
-An interactive Streamlit explainer, built ahead of the final Phase 4 dashboard, that walks through
-what Phases 1-3 produced. Run it after the commands above:
+An interactive Streamlit dashboard that walks through what every phase produced. Run it after the
+commands above:
 
 ```bash
 uv run streamlit run dashboard/app.py
 ```
 
-Seven pages: an overview with the headline result and the four invariants, a Phase 1 page (detector
+Nine pages: an overview with the headline result and the four invariants, a Phase 1 page (detector
 metrics, PR curve, typology recall, feature importance), a Phase 2 page (GA convergence, the
 naive-vs-evolved recall gap, the winning strategy decoded), a Phase 3 page (the arms-race curve with
-confidence intervals, the cross-play matrix, the clean-holdout cost), a live genome explorer that decodes
+confidence intervals, the cross-play matrix, the clean-holdout cost), a Phase 4 page (each round's decoded transaction flows scored by D_r and
+D_(r+1), TreeSHAP attribution drift, and a fixed projection of real transactions coloured by each
+detector's decisions), a Phase 5 page (the same pipeline on the real IBM data), a live genome explorer that decodes
 and scores any set of the twelve genes against the actual trained detector, an architecture
 walkthrough, and a limitations page. Everything except the live explorer reads the static JSON in
 `reports/` rather than retraining or re-evolving anything — see `dashboard/README.md` for how it's
 put together.
 
-This is not the final Phase 4 dashboard: everything is a replay of a finished run, not a live feed,
-and the SHAP drift view is not built.
+Everything is a replay of a finished run, not a live feed.
 
 ## Phase status
 
@@ -82,12 +92,13 @@ and the SHAP drift view is not built.
 | 1 | 1 | Synthetic generator, loader, feature pipeline, LightGBM detector, alert-budget metrics | done |
 | 2 | 2, 3 | GA adversary: genome, decoder, constraints, fitness, DEAP driver | done |
 | 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | done |
-| 4 | 5 | Streamlit + Plotly dashboard | prototype explainer built ahead of Phase 3 (`dashboard/`) |
-| 5 | — | Real IBM AML data, PaySim cross-validation | not started |
-| 6 | — | Final consolidated report | not started |
+| 4 | 5 | Dashboard: flows, attribution drift, decision projection | done |
+| 5 | 1, 4 | Real IBM AML data (HI-Small), cross-dataset transfer, feature-group ablation | done |
+| 6 | — | Final consolidated report | done — [docs/report.md](docs/report.md) |
 
-Writeups with results and design reasoning: [docs/phase1.md](docs/phase1.md),
-[docs/phase2.md](docs/phase2.md), [docs/phase3.md](docs/phase3.md). Notebooks:
+**Final report: [docs/report.md](docs/report.md).** Writeups with results and design reasoning:
+[docs/phase1.md](docs/phase1.md), [docs/phase2.md](docs/phase2.md), [docs/phase3.md](docs/phase3.md),
+[docs/phase4.md](docs/phase4.md), [docs/phase5.md](docs/phase5.md). Notebooks:
 `notebooks/phase1_detector.ipynb`, `notebooks/phase2_adversary.ipynb`,
 `notebooks/phase3_arms_race.ipynb`.
 
@@ -147,15 +158,16 @@ flag.
 Stated up front rather than discovered at demo time:
 
 1. **You cannot plot the decision boundary** of a 74-dimensional LightGBM model, despite the
-   synopsis phrasing. The substitutes are a 2-D projection with score contours and — more
-   informative — SHAP feature-importance drift between rounds, which shows *which* features the
-   adversary forced the detector to stop trusting.
+   synopsis phrasing. The substitutes (Phase 4) are TreeSHAP attribution drift between rounds, which
+   shows *which* features the adversary forced the detector to stop trusting, and a fixed projection
+   of real transactions coloured by each detector's decisions — no synthesised contours.
 2. **"Live transaction flows" is replay**, not a live feed.
-3. **PaySim does not transfer cleanly.** Different schema, no comparable account graph or typology
-   labels, so the relational features do not carry over. Fallback: validate only the
-   per-transaction subset.
-4. **Synthetic typologies are cleaner than real ones.** Phase 1 and 2 numbers are a pipeline
-   check, not the project's headline result.
+3. **PaySim was not used.** No comparable account graph or typology labels, so 57 of 74 features do
+   not carry over. Phase 5 measures what such a check would keep instead: retrained on the 17
+   per-transaction features alone, recall falls under a third on both datasets.
+4. **Synthetic numbers are a pipeline check.** Detectors trained on the synthetic world and on IBM
+   catch essentially none of each other's laundering (Phase 5). The IBM data is the headline, and it
+   is itself simulated (IBM's AMLworld) — the best public benchmark, not bank data.
 
 ## Repository layout
 
@@ -167,10 +179,13 @@ src/arena/
   features/              AccountGraph (frozen + overlay), windows, the shared featurize
   detector/              LightGBM model, alert-budget threshold, imbalance-aware metrics
   adversary/             genome, decoder, constraints, fitness, DEAP driver
-scripts/                 make_synthetic, train_detector, evolve_adversary
+  loop/                  Phase 3 closed loop: pool, evaluation, orchestrator, re-evaluation, gate
+  explain.py             Phase 4: attribution drift, fixed projection, decoded flows
+scripts/                 one per step; prepare_ibm and phase5_transfer for Phase 5
+dashboard/               Streamlit dashboard
 notebooks/               one per phase
-tests/                   64 tests, including the four invariant checks
-config/default.yaml      all tunables
+tests/                   102 tests, including the four invariant checks
+config/default.yaml      all tunables; config/ibm.yaml is the Phase 5 overlay (ARENA_CONFIG)
 reports/                 metrics JSON + figures (committed; this is the deliverable)
 docs/                    per-phase writeups
 ```

@@ -58,6 +58,7 @@ from arena.adversary.constraints import repair_genome, validate_sub_ledger
 from arena.adversary.decoder import (
     DEFAULT_FEE_RATE,
     Episode,
+    real_world,
     decode,
     delivered_amount,
     elapsed_hours,
@@ -224,7 +225,7 @@ class EpisodeSampler:
     what makes the episode-averaging guard in this module work.
     """
 
-    __slots__ = ("accounts", "bank_of", "lo", "hi", "epoch")
+    __slots__ = ("accounts", "bank_of", "lo", "hi", "epoch", "world")
 
     def __init__(self, ledger: pd.DataFrame, epoch: pd.Timestamp) -> None:
         from_acc = ledger["from_account"].astype("string")
@@ -246,6 +247,11 @@ class EpisodeSampler:
         self.lo = float(np.percentile(hours, 5))
         self.hi = float(np.percentile(hours, 70))
         self.epoch = epoch
+        # A real ledger's rules (see RealWorld): one currency per operation, so
+        # source, destination and mules come only from accounts that use it.
+        self.world = real_world(ledger)
+        if self.world is not None:
+            self.accounts = np.asarray([a for a in self.accounts if a in self.world.accounts], dtype=object)
 
     def sample(
         self,
@@ -310,6 +316,7 @@ class EpisodeSampler:
                     mule_pool=chosen[2:],
                     bank_of=self.bank_of,
                     epoch=self.epoch,
+                    world=self.world,
                 )
             )
         return episodes

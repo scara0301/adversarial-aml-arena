@@ -65,6 +65,21 @@ def phase4_explain() -> dict | None:
     return load_json(str(cfg.path("paths.reports") / "phase4_explain.json"))
 
 
+def ibm(name: str) -> dict | None:
+    """A Phase 5 report from reports/ibm/, e.g. ``ibm("phase1_metrics")``.
+
+    The IBM run reuses the Phase 1-3 scripts unchanged, so its files have the
+    same names as the synthetic ones, one directory down.
+    """
+    cfg = get_config()
+    return load_json(str(cfg.path("paths.reports") / "ibm" / f"{name}.json"))
+
+
+def ibm_image(name: str) -> str | None:
+    p = report_image_path("ibm") / name
+    return str(p) if p.exists() else None
+
+
 def phase2_example_strategy() -> pd.DataFrame | None:
     cfg = get_config()
     return load_csv(str(cfg.path("paths.reports") / "phase2_best_strategy_example.csv"))

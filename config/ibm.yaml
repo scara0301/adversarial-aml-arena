@@ -1,0 +1,26 @@
+# Phase 5 overlay: the real IBM AML data (Kaggle ealtman2019, HI-Small).
+# Laid over config/default.yaml by setting ARENA_CONFIG=config/ibm.yaml, so the
+# Phase 1-3 scripts run unchanged and write to reports/ibm/ and artifacts/ibm/.
+# Only what the data forces is changed here; every model and GA setting is shared.
+
+paths:
+  # The scripts call this key "synthetic_ledger" for historical reasons; under this
+  # overlay it is the cleaned IBM ledger written by scripts/prepare_ibm.py.
+  synthetic_ledger: data/processed/ibm_ledger.parquet
+  holdout_clean: data/processed/ibm_holdout_clean.parquet
+  detector: artifacts/ibm/detector_r0.lgb
+  reports: reports/ibm
+
+ibm:
+  trans: data/raw/HI-Small_Trans.csv
+
+arena:
+  artifacts: artifacts/ibm/arena
+
+adversary:
+  episode:
+    # HI-Small has ten live days. With a 60/15/25 time split the validation period
+    # is ~1.5 days and the holdout ~2.5, and every episode must start and finish
+    # inside one period, so the synthetic two-week deadline cannot fit. 24 hours
+    # is also closer to the data: most HI-Small patterns complete within a day or two.
+    deadline_hours: 24

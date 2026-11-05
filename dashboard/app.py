@@ -36,6 +36,7 @@ from dashboard.views import (  # noqa: E402
     phase2_adversary,
     phase3_arms_race,
     phase4_inside,
+    phase5_ibm,
     try_it,
 )
 
@@ -47,6 +48,7 @@ PAGES = {
     "🧬 Phase 2 — The Adversary": phase2_adversary.render,
     "🥊 Phase 3 — The Arms Race": phase3_arms_race.render,
     "🔬 Phase 4 — Inside the Arms Race": phase4_inside.render,
+    "🌍 Phase 5 — Real IBM Data": phase5_ibm.render,
     "🧪 Try the Adversary Yourself": try_it.render,
     "⚙️ How It Works": how_it_works.render,
     "⚠️ Limitations & What's Next": limitations.render,
@@ -72,6 +74,8 @@ def _render_sidebar_status() -> None:
     st.sidebar.markdown(f"- Phase 3 (closed loop): {'✅' if p3_ok else '⬜ not run'}")
     p4_ok = data.phase4_explain() is not None
     st.sidebar.markdown(f"- Phase 4 (visualisation): {'✅' if p4_ok else '⬜ not run'}")
+    p5_ok = data.ibm("phase1_metrics") is not None
+    st.sidebar.markdown(f"- Phase 5 (real IBM data): {'✅' if p5_ok else '⬜ not run'}")
     if not (p1_ok and p2_ok):
         st.sidebar.warning(
             "Run the Phase 1/2 scripts to populate this dashboard with real "

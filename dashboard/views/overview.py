@@ -46,7 +46,7 @@ PHASES = [
     ("2", "GA adversary: genome, decoder, constraints, fitness", "✅ done"),
     ("3", "Closed-loop arena: retraining, arms-race curve", "✅ done"),
     ("4", "Dashboard: flows, attribution drift, decision projection", "✅ done"),
-    ("5", "Real IBM AML data, PaySim cross-validation", "⬜ not started"),
+    ("5", "Real IBM AML data; transfer and feature-group checks", "✅ done"),
     ("6", "Final consolidated report", "⬜ not started"),
 ]
 

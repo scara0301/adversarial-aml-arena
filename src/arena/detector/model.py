@@ -35,6 +35,9 @@ from arena.features.pipeline import DEFAULT_WINDOWS
 #: because the PR-AUC signal is too noisy to stop on. See ``train``.
 MIN_VALID_POSITIVES_FOR_EARLY_STOP = 100
 
+#: Below this many rows, score on one thread (see Detector.score_features).
+SMALL_BATCH = 2_000
+
 DEFAULT_PARAMS = {
     "objective": "binary",
     "n_estimators": 400,
@@ -164,7 +167,12 @@ class Detector:
         zero, so a caller cannot silently shift the columns.
         """
         aligned = X.reindex(columns=self.features, fill_value=0.0)
-        return self.booster.predict(aligned.to_numpy(dtype=np.float64))
+        # The GA scores tens of thousands of sub-ledgers of a few dozen rows. Spinning
+        # up every core for each of those costs more than the prediction, and two GA
+        # processes side by side oversubscribed the CPU ~10x on IBM data. One thread
+        # for small batches; identical predictions either way.
+        kw = {"num_threads": 1} if len(aligned) < SMALL_BATCH else {}
+        return self.booster.predict(aligned.to_numpy(dtype=np.float64), **kw)
 
     def score_ledger(self, ledger: pd.DataFrame, graph: AccountGraph) -> np.ndarray:
         """Featurize and score transactions.

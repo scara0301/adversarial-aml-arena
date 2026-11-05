@@ -16,9 +16,22 @@ Two files per variant, and both are needed:
     *typology*, which objective 1 requires. Parsing it is therefore not
     optional.
 
-This module is written now, ahead of Phase 5, so that the loader contract is
-real rather than aspirational -- but it is unexercised until the download
-happens.
+Three cleaning steps, each found by profiling HI-Small before training on it,
+and each recorded in ``df.attrs["cleaning"]`` so a writeup can state exactly
+what was removed:
+
+1. **Self-transfers are dropped.** 11.6% of HI-Small rows send money from an
+   account to itself (mostly "Reinvestment"); 11 of 591,212 are laundering. The
+   canonical schema rejects them, because a transfer with no counterparty is not
+   a transaction an adversary could hide behind.
+2. **The dead tail is cut.** Background traffic stops on 10 September (200k-1.1M
+   rows a day), but laundering keeps completing for eight more days, in a tail of
+   ~1,100 rows that is ~60% laundering. Left in, a chronological holdout would
+   sit on that tail and "late timestamp means laundering" would score
+   brilliantly while meaning nothing -- exactly the kind of result this project
+   treats as a bug. Days with less than 1% of the median daily volume are cut.
+3. **Unmatched positives are "unattributed".** Only 3,209 of 5,177 positives
+   appear in the patterns file. The rest keep their label but not a typology.
 """
 
 from __future__ import annotations
@@ -47,7 +60,8 @@ _COLUMN_MAP = {
 # The dataset's pattern names, mapped onto our typology vocabulary. SCATTER-
 # GATHER and BIPARTITE are folded into their nearest equivalents; RANDOM has no
 # recognisable shape, so it is labelled "stack" (generic layering) rather than
-# being silently dropped.
+# being silently dropped. Positives the patterns file does not list at all are
+# "unattributed" (see load_ibm_aml).
 _TYPOLOGY_MAP = {
     "FAN-OUT": "fan-out",
     "FAN-IN": "fan-in",
@@ -119,6 +133,7 @@ def load_ibm_aml(
     trans_path: str | Path,
     patterns_path: str | Path | None = None,
     nrows: int | None = None,
+    trim_tail: bool = True,
 ) -> pd.DataFrame:
     """Load the IBM AML transactions CSV into the canonical schema.
 
@@ -128,16 +143,37 @@ def load_ibm_aml(
             sibling file with ``_Trans.csv`` replaced by ``_Patterns.txt``.
         nrows: Read only the first N rows. HI-Small is ~5M rows / ~500MB, so
             this is the usual way to work interactively.
+        trim_tail: Cut the days after background traffic stops (see module docs).
     """
     trans_path = Path(trans_path)
-    df = pd.read_csv(trans_path, nrows=nrows)
+    df = pd.read_csv(trans_path, nrows=nrows, dtype={"Account": "string", "Account.1": "string"})
 
     missing = [c for c in _COLUMN_MAP if c not in df.columns]
     if missing:
         raise ValueError(f"{trans_path.name} is missing expected column(s): {missing}")
 
     df = df.rename(columns=_COLUMN_MAP)
-    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    df["timestamp"] = pd.to_datetime(df["timestamp"], format="%Y/%m/%d %H:%M", errors="coerce")
+    cleaning: dict = {"rows_read": int(len(df)), "positives_read": int(df["is_laundering"].sum())}
+
+    # 1. self-transfers
+    self_tx = df["from_account"] == df["to_account"]
+    cleaning["self_transfers_dropped"] = int(self_tx.sum())
+    cleaning["self_transfer_positives_dropped"] = int(df.loc[self_tx, "is_laundering"].sum())
+    df = df.loc[~self_tx]
+
+    # 2. the dead tail
+    if trim_tail and len(df):
+        day = df["timestamp"].dt.floor("D")
+        per_day = day.value_counts().sort_index()
+        live = per_day[per_day >= 0.01 * per_day.median()]
+        end = live.index.max() + pd.Timedelta(days=1)
+        tail = df["timestamp"] >= end
+        cleaning["tail_cut_at"] = str(end)
+        cleaning["tail_rows_dropped"] = int(tail.sum())
+        cleaning["tail_positives_dropped"] = int(df.loc[tail, "is_laundering"].sum())
+        df = df.loc[~tail]
+    df = df.reset_index(drop=True)
     df["from_account"] = df["from_account"].astype("string")
     df["to_account"] = df["to_account"].astype("string")
     df["typology"] = pd.array([None] * len(df), dtype="string")
@@ -164,10 +200,17 @@ def load_ibm_aml(
     # disagree at the margins; schema.validate() requires them to be consistent,
     # so resolve here rather than letting validation fail on real data.
     #
-    # A positive flag with no matched pattern gets the generic "stack" label; a
+    # A positive flag with no matched pattern is "unattributed"; a
     # matched pattern with a zero flag is promoted to positive.
     flagged = df["is_laundering"].astype("int8") == 1
-    df.loc[flagged & df["typology"].isna(), "typology"] = "stack"
+    matched = df["typology"].notna()
+    cleaning["positives_matched_to_pattern"] = int((flagged & matched).sum())
+    cleaning["pattern_rows_promoted_to_positive"] = int((~flagged & matched).sum())
+    df.loc[flagged & ~matched, "typology"] = "unattributed"
     df.loc[df["typology"].notna(), "is_laundering"] = 1
 
-    return schema.validate(schema.coerce(df))
+    out = schema.validate(schema.coerce(df))
+    cleaning["rows_kept"] = int(len(out))
+    cleaning["positives_kept"] = int(out["is_laundering"].sum())
+    out.attrs["cleaning"] = cleaning
+    return out

@@ -1,0 +1,189 @@
+{
+  "phase": 5,
+  "budget": 0.005,
+  "transfer": {
+    "synthetic->synthetic": {
+      "recall_at_budget": 0.5371024734982333,
+      "pr_auc": 0.45428935603051335,
+      "precision_at_budget": 0.24310275889644142,
+      "typology_recall": {
+        "cycle": 0.48148148148148145,
+        "fan-in": 0.4158415841584158,
+        "fan-out": 0.4141791044776119,
+        "gather-scatter": 0.4581497797356828,
+        "stack": 0.7427821522309711
+      }
+    },
+    "synthetic->ibm": {
+      "recall_at_budget": 0.0,
+      "pr_auc": 0.0008496958753434014,
+      "precision_at_budget": 0.0,
+      "typology_recall": {
+        "cycle": 0.0,
+        "fan-in": 0.0,
+        "fan-out": 0.0,
+        "gather-scatter": 0.0,
+        "stack": 0.0,
+        "unattributed": 0.0
+      }
+    },
+    "ibm->synthetic": {
+      "recall_at_budget": 0.015901060070671377,
+      "pr_auc": 0.0032001397215216587,
+      "precision_at_budget": 0.007197121151539384,
+      "typology_recall": {
+        "cycle": 0.0,
+        "fan-in": 0.04950495049504951,
+        "fan-out": 0.011194029850746268,
+        "gather-scatter": 0.013215859030837005,
+        "stack": 0.005249343832020997
+      }
+    },
+    "ibm->ibm": {
+      "recall_at_budget": 0.668429003021148,
+      "pr_auc": 0.42402838898822104,
+      "precision_at_budget": 0.15778213585309325,
+      "typology_recall": {
+        "cycle": 0.9367088607594937,
+        "fan-in": 0.9518072289156626,
+        "fan-out": 0.9060402684563759,
+        "gather-scatter": 0.9559748427672956,
+        "stack": 0.8631578947368421,
+        "unattributed": 0.25544554455445545
+      }
+    }
+  },
+  "ablation": {
+    "synthetic": {
+      "all features": {
+        "recall_at_budget": 0.5371024734982333,
+        "pr_auc": 0.44880684208924154,
+        "precision_at_budget": 0.24310275889644142,
+        "typology_recall": {
+          "cycle": 0.5185185185185185,
+          "fan-in": 0.38613861386138615,
+          "fan-out": 0.4291044776119403,
+          "gather-scatter": 0.44493392070484583,
+          "stack": 0.7506561679790026
+        },
+        "n_features": 74
+      },
+      "per-transaction only": {
+        "recall_at_budget": 0.15547703180212014,
+        "pr_auc": 0.02332031273817392,
+        "precision_at_budget": 0.03650694876581622,
+        "typology_recall": {
+          "cycle": 0.0,
+          "fan-in": 0.18811881188118812,
+          "fan-out": 0.12313432835820895,
+          "gather-scatter": 0.16740088105726872,
+          "stack": 0.17585301837270342
+        },
+        "n_features": 17
+      },
+      "relational only": {
+        "recall_at_budget": 0.4549469964664311,
+        "pr_auc": 0.3664587021043056,
+        "precision_at_budget": 0.20591763294682128,
+        "typology_recall": {
+          "cycle": 0.4074074074074074,
+          "fan-in": 0.26732673267326734,
+          "fan-out": 0.34701492537313433,
+          "gather-scatter": 0.3700440528634361,
+          "stack": 0.6876640419947506
+        },
+        "n_features": 57
+      },
+      "all but payment format": {
+        "recall_at_budget": 0.5273851590106007,
+        "pr_auc": 0.44370106498920947,
+        "precision_at_budget": 0.2387045181927229,
+        "typology_recall": {
+          "cycle": 0.48148148148148145,
+          "fan-in": 0.37623762376237624,
+          "fan-out": 0.40298507462686567,
+          "gather-scatter": 0.44493392070484583,
+          "stack": 0.7506561679790026
+        },
+        "n_features": 72
+      }
+    },
+    "ibm": {
+      "all features": {
+        "recall_at_budget": 0.668429003021148,
+        "pr_auc": 0.42402838898822104,
+        "precision_at_budget": 0.15778213585309325,
+        "typology_recall": {
+          "cycle": 0.9367088607594937,
+          "fan-in": 0.9518072289156626,
+          "fan-out": 0.9060402684563759,
+          "gather-scatter": 0.9559748427672956,
+          "stack": 0.8631578947368421,
+          "unattributed": 0.25544554455445545
+        },
+        "n_features": 74
+      },
+      "per-transaction only": {
+        "recall_at_budget": 0.1865558912386707,
+        "pr_auc": 0.018758084693996927,
+        "precision_at_budget": 0.03127374018738921,
+        "typology_recall": {
+          "cycle": 0.22784810126582278,
+          "fan-in": 0.3132530120481928,
+          "fan-out": 0.21476510067114093,
+          "gather-scatter": 0.2389937106918239,
+          "stack": 0.19473684210526315,
+          "unattributed": 0.11485148514851486
+        },
+        "n_features": 17
+      },
+      "relational only": {
+        "recall_at_budget": 0.6170694864048338,
+        "pr_auc": 0.29017601427542333,
+        "precision_at_budget": 0.14565876270279907,
+        "typology_recall": {
+          "cycle": 0.8607594936708861,
+          "fan-in": 0.9156626506024096,
+          "fan-out": 0.8389261744966443,
+          "gather-scatter": 0.8647798742138365,
+          "stack": 0.8,
+          "unattributed": 0.2396039603960396
+        },
+        "n_features": 57
+      },
+      "all but payment format": {
+        "recall_at_budget": 0.6359516616314199,
+        "pr_auc": 0.35101364754334463,
+        "precision_at_budget": 0.15011588518452487,
+        "typology_recall": {
+          "cycle": 0.8734177215189873,
+          "fan-in": 0.9397590361445783,
+          "fan-out": 0.8859060402684564,
+          "gather-scatter": 0.9150943396226415,
+          "stack": 0.8263157894736842,
+          "unattributed": 0.22772277227722773
+        },
+        "n_features": 72
+      }
+    }
+  },
+  "per_transaction_features": [
+    "amount_log",
+    "amount_mod_1000",
+    "amount_mod_100",
+    "is_round_100",
+    "threshold_ratio",
+    "is_just_below_threshold",
+    "threshold_gap",
+    "hour",
+    "day_of_week",
+    "is_business_hours",
+    "is_weekend",
+    "cross_bank",
+    "cross_currency",
+    "fx_loss",
+    "format_code",
+    "format_scrutiny",
+    "currency_code"
+  ]
+}

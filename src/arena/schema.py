@@ -21,8 +21,11 @@ from __future__ import annotations
 
 import pandas as pd
 
-#: Laundering typologies this project recognises.
-TYPOLOGIES = ("fan-out", "fan-in", "cycle", "gather-scatter", "stack")
+#: Laundering typologies this project recognises. ``unattributed`` exists only for
+#: real data: a row the source labels laundering but whose pattern it does not say
+#: (in IBM HI-Small, 38% of positives are missing from the patterns file). Folding
+#: those into a real typology would quietly corrupt per-typology recall.
+TYPOLOGIES = ("fan-out", "fan-in", "cycle", "gather-scatter", "stack", "unattributed")
 
 #: Payment formats, mirroring the IBM AML dataset's vocabulary. Ordered roughly
 #: from lower to higher scrutiny -- the adversary's ``format_mix`` gene biases

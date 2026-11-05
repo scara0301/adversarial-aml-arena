@@ -104,6 +104,72 @@ MIN_GAP_HOURS = 1.0 / 60.0
 _FORMATS_BY_SCRUTINY = ("ACH", "Cheque", "Credit Card", "Reinvestment", "Wire", "Cash", "Bitcoin")
 
 
+class RealWorld:
+    """What a real ledger allows an adversary to do, measured from the ledger.
+
+    On synthetic data the decoder shares the generator's own processes
+    (:func:`arena.data.synthetic.fx_legs`, the full format list), so adversary
+    rows are indistinguishable from the world's by construction. A real ledger
+    has no generator to share; its rules have to be read off the data, and the
+    adversary's action space must be cut down to them. Every rule here was found
+    the hard way -- the first IBM GA run reported evasion 1.000 and a completion
+    of 525x the goal, and reading the decoded transactions showed three holes:
+
+    * **Currency belongs to the account.** 98% of IBM accounts transact in one
+      currency, amounts are recorded in that currency's own units, and a
+      same-currency row always has ``received == paid``. A decoder drawing a
+      currency per tranche paid one account's tranches in five currencies within
+      eight minutes, and -- because a USD->Yen row multiplies the number by ~150
+      -- chained conversions *created money*, breaking invariant 2. So an
+      operation stays inside one currency, here the goal's (US Dollar), and only
+      uses accounts that transact in it.
+    * **Only formats the world uses between two accounts.** In IBM,
+      "Reinvestment" occurs only as a self-transfer; with those dropped, a
+      Reinvestment payment between two accounts is a format the detector has
+      never seen, and an unseen category scores as benign. The champion used it
+      for most of its tranches.
+    """
+
+    __slots__ = ("currency", "formats", "accounts")
+
+    def __init__(self, ledger: pd.DataFrame, currency: str = "US Dollar") -> None:
+        present = set(ledger["payment_format"].astype(str).unique())
+        self.formats = tuple(f for f in _FORMATS_BY_SCRUTINY if f in present)
+        self.currency = currency
+        pay = pd.DataFrame({"a": ledger["from_account"].astype(str), "c": ledger["payment_currency"].astype(str)})
+        rec = pd.DataFrame({"a": ledger["to_account"].astype(str), "c": ledger["receiving_currency"].astype(str)})
+        both = pd.concat([pay, rec], ignore_index=True)
+        # an account is in the currency only if *every* row it touches is
+        n_cur = both.groupby("a")["c"].nunique()
+        first = both.groupby("a")["c"].first()
+        self.accounts = set(first.index[(n_cur == 1) & (first == currency)])
+
+    def legs(self, rng: np.random.Generator, amounts: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        amounts = np.asarray(amounts, dtype=np.float64)
+        cur = np.full(len(amounts), self.currency, dtype=object)
+        return cur, cur.copy(), amounts.copy()
+
+
+def real_world(ledger: pd.DataFrame) -> RealWorld | None:
+    """``None`` for a synthetic ledger (shares the generator's processes), else its rules.
+
+    A ledger whose currencies all belong to the synthetic vocabulary was made by
+    the generator; keeping the synthetic processes there leaves every synthetic
+    result bit-for-bit reproducible. Any other ledger is real data.
+    """
+    seen = set(ledger["payment_currency"].astype(str).unique()) | set(
+        ledger["receiving_currency"].astype(str).unique()
+    )
+    return None if seen <= set(CURRENCIES) else RealWorld(ledger)
+
+
+def _legs(episode: "Episode", rng: np.random.Generator, amounts: np.ndarray):
+    if episode.world is not None:
+        return episode.world.legs(rng, amounts)
+    cur_idx = rng.choice(len(CURRENCIES), size=len(amounts), p=CURRENCY_P)
+    return fx_legs(rng, amounts, cur_idx)
+
+
 @dataclass(slots=True)
 class Episode:
     """One laundering task: move money from A to B by a deadline.
@@ -123,6 +189,8 @@ class Episode:
     mule_pool: list[str]
     bank_of: dict[str, int] = field(default_factory=dict)
     epoch: pd.Timestamp = field(default_factory=lambda: pd.Timestamp("2026-01-01"))
+    #: The rules of a real ledger; ``None`` means the synthetic world's. See RealWorld.
+    world: RealWorld | None = None
 
     def bank(self, account: str) -> int:
         return int(self.bank_of.get(account, 0))
@@ -252,16 +320,17 @@ def _snap_business_hours(t: float, bias: float, rng: np.random.Generator) -> flo
     return t + (24.0 - hour) + 9.0  # next morning
 
 
-def _pick_format(format_mix: float, rng: np.random.Generator) -> str:
+def _pick_format(format_mix: float, rng: np.random.Generator, formats: tuple[str, ...] = _FORMATS_BY_SCRUTINY) -> str:
     """Payment format, biased along the scrutiny axis by ``format_mix``.
 
     A little randomness is kept so the adversary cannot collapse onto a single
-    format -- which would itself be a detectable regularity.
+    format -- which would itself be a detectable regularity. ``formats`` is the
+    scrutiny-ordered list the world actually uses (see RealWorld).
     """
-    n = len(_FORMATS_BY_SCRUTINY)
+    n = len(formats)
     centre = format_mix * (n - 1)
     idx = int(np.clip(round(rng.normal(centre, 0.8)), 0, n - 1))
-    return _FORMATS_BY_SCRUTINY[idx]
+    return formats[idx]
 
 
 def decode(
@@ -281,6 +350,7 @@ def decode(
     """
     p = decode_genes(genome)
     template = TEMPLATES[int(p["typology_template"])]
+    formats = episode.world.formats if episode.world is not None else _FORMATS_BY_SCRUTINY
 
     mules = [m for m in episode.mule_pool[: int(p["mule_pool_size"])]
              if m not in (episode.src_account, episode.dst_account)]
@@ -309,8 +379,7 @@ def decode(
             )
             # Currency and FX come from the process every other row uses -- see
             # DEFAULT_FEE_RATE. One batched draw per sender keeps this cheap.
-            cur_idx = rng.choice(len(CURRENCIES), size=len(tranches), p=CURRENCY_P)
-            pay_cur, recv_cur, recv_amt = fx_legs(rng, tranches, cur_idx)
+            pay_cur, recv_cur, recv_amt = _legs(episode, rng, tranches)
 
             # Money sits at each hop before moving on: the dormancy gene.
             t = clock.get(sender, float(episode.start_hour)) + dormancy * (hop > 0)
@@ -350,7 +419,7 @@ def decode(
                     t = previous + MIN_GAP_HOURS
 
                 received = float(recv_amt[j]) * (1.0 - fee_rate)
-                fmt = _pick_format(float(p["format_mix"]), rng)
+                fmt = _pick_format(float(p["format_mix"]), rng, formats)
 
                 records.append(
                     {
@@ -393,8 +462,7 @@ def decode(
     if template == "cycle" and records and len(records) < MAX_TRANSACTIONS:
         sender = episode.dst_account
         token = max(MIN_TRANCHE, float(episode.amount_goal) * 0.001)
-        t_cur_idx = rng.choice(len(CURRENCIES), size=1, p=CURRENCY_P)
-        t_cur, t_recv_cur, t_recv = fx_legs(rng, np.array([token]), t_cur_idx)
+        t_cur, t_recv_cur, t_recv = _legs(episode, rng, np.array([token]))
         t = clock.get(sender, float(episode.start_hour)) + max(dormancy, 1.0)
         records.append(
             {
@@ -407,7 +475,7 @@ def decode(
                 "payment_currency": str(t_cur[0]),
                 "amount_received": float(t_recv[0]) * (1.0 - fee_rate),
                 "receiving_currency": str(t_recv_cur[0]),
-                "payment_format": _pick_format(float(p["format_mix"]), rng),
+                "payment_format": _pick_format(float(p["format_mix"]), rng, formats),
                 "is_laundering": 1,
                 "typology": "cycle",
                 "pattern_id": 0,

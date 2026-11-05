@@ -1,0 +1,54 @@
+loading detector C:\projs\MINI PROJ\artifacts\ibm\detector_r0.lgb
+  395 trees, 74 features
+loading ledger C:\projs\MINI PROJ\data\processed\ibm_ledger.parquet
+  froze background graph: 422,648 accounts, 4,486,418 rows, 86.9s
+  threshold at a 0.50% alert budget: tau = 0.948781
+
+evolving: population 100, 40 generations, 5 episodes per evaluation (~20,500 candidate evaluations)
+  goal: move $250,000 within 24h; completion floor 0.95
+  gen   0  best=0.0000  mean=0.0000  completion=0.000  evasion=0.975  txns=16  diversity=0.392
+  gen   5  best=0.9920  mean=0.1458  completion=1.000  evasion=1.000  txns=105  diversity=0.404
+  gen  10  best=0.9976  mean=0.8381  completion=0.999  evasion=1.000  txns=8  diversity=0.309
+  gen  15  best=0.9978  mean=0.8701  completion=1.000  evasion=1.000  txns=19  diversity=0.348
+  gen  20  best=0.9999  mean=0.9502  completion=1.000  evasion=1.000  txns=4  diversity=0.364
+  gen  25  best=0.9999  mean=0.9366  completion=1.000  evasion=1.000  txns=3  diversity=0.385
+  gen  30  best=1.0000  mean=0.9218  completion=1.000  evasion=1.000  txns=2  diversity=0.399
+  gen  35  best=1.0000  mean=0.9581  completion=1.000  evasion=1.000  txns=2  diversity=0.401
+  gen  40  best=1.0000  mean=0.9090  completion=1.000  evasion=1.000  txns=2  diversity=0.414
+  done in 3.1 min
+
+re-scoring strategies on 20 fresh episodes
+
+Detector recall on adversary transactions
+------------------------------------------
+  naive (hand-written)      0.0000
+  random (unevolved mean)   0.0059
+  evolved (GA best)         0.0000
+
+  naive fitness            0.9982  (completion 1.000, evasion 1.000)
+  random fitness           0.0000
+  evolved fitness          1.0000  (completion 1.000, evasion 1.000)
+
+best evolved strategy
+  template            gather-scatter
+  routing hops        1
+  tranches per leg    1
+  tranche skew        0.628
+  threshold hug       0.078
+  mean delay          0.0 h
+  delay jitter        0.826
+  business-hours bias 0.008
+  mule pool           10
+  mule reuse          0.654
+  format mix          0.460
+  hop dormancy        0.7 h
+
+wrote C:\projs\MINI PROJ\reports\ibm\phase2_metrics.json
+wrote C:\projs\MINI PROJ\reports\ibm\phase2_best_strategy_example.csv  (2 transactions)
+wrote figures -> C:\projs\MINI PROJ\reports\ibm/phase2_*.png
+
+Phase 2 gate (fitness improved, recall gap > 0.15, completion >= floor): FAIL
+  best fitness 0.0000 -> 1.0000
+  mean fitness 0.0000 -> 0.9090
+  recall gap 0.0000
+  evolved completion 1.0000

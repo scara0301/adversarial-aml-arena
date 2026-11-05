@@ -25,7 +25,8 @@ def test_generated_ledger_validates(ledger):
 
 def test_all_five_typologies_are_present(ledger):
     present = set(ledger["typology"].dropna().unique())
-    assert present == set(schema.TYPOLOGIES), f"missing typologies: {set(schema.TYPOLOGIES) - present}"
+    expected = set(schema.TYPOLOGIES) - {"unattributed"}  # real-data-only label
+    assert present == expected, f"missing typologies: {expected - present}"
 
 
 def test_laundering_rate_is_close_to_target():

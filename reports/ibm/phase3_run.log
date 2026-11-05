@@ -1,0 +1,118 @@
+round-0 detector: C:\projs\MINI PROJ\artifacts\ibm\detector_r0.lgb
+loading ledger C:\projs\MINI PROJ\data\processed\ibm_ledger.parquet
+
+closed loop: 5 rounds, population 100, 40 generations, feedback cap 20%, warm start on
+background graph frozen: 422,648 accounts
+features built in 461s  (train 65,468 rows / 2,518 pos, valid 17,472 / 672, holdout 1,121,605 / 1,324)
+
+=== round 0 ===  D_0 holdout recall@budget 0.668  PR-AUC 0.424  tau 0.9488
+  gen   0  best=0.1696  mean=0.0017  completion=0.522  evasion=1.000  txns=5  diversity=0.392
+  gen   5  best=0.9944  mean=0.2484  completion=1.000  evasion=1.000  txns=25  diversity=0.286
+  gen  10  best=0.9999  mean=0.8702  completion=1.000  evasion=1.000  txns=3  diversity=0.341
+  gen  15  best=1.0000  mean=0.9595  completion=1.000  evasion=1.000  txns=2  diversity=0.354
+  gen  20  best=1.0000  mean=0.9736  completion=1.000  evasion=1.000  txns=2  diversity=0.367
+  gen  25  best=1.0000  mean=0.9472  completion=1.000  evasion=1.000  txns=2  diversity=0.373
+  gen  30  best=1.0000  mean=0.9382  completion=1.000  evasion=1.000  txns=1  diversity=0.375
+  gen  35  best=1.0000  mean=0.9766  completion=1.000  evasion=1.000  txns=1  diversity=0.386
+  gen  40  best=1.0000  mean=0.9268  completion=1.000  evasion=1.000  txns=1  diversity=0.381
+  A_0 champion vs D_0 on held-out episodes: detector recall 0.000  evasion 1.000  success rate 1.00  (GA best fitness 1.000, 2.8 min)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+  fed back 48 operations / 72 rows (3% of original positives, cap 20%) -> D_1 (387 trees)
+
+=== round 1 ===  D_1 holdout recall@budget 0.660  PR-AUC 0.420  tau 0.9505
+  gen   0  best=0.8000  mean=0.0478  completion=1.000  evasion=0.800  txns=1  diversity=0.418
+  gen   5  best=1.0000  mean=0.7568  completion=1.000  evasion=1.000  txns=1  diversity=0.339
+  gen  10  best=1.0000  mean=0.8836  completion=1.000  evasion=1.000  txns=1  diversity=0.364
+  gen  15  best=1.0000  mean=0.9153  completion=1.000  evasion=1.000  txns=1  diversity=0.377
+  gen  20  best=1.0000  mean=0.9437  completion=1.000  evasion=1.000  txns=1  diversity=0.367
+  gen  25  best=1.0000  mean=0.9420  completion=1.000  evasion=1.000  txns=1  diversity=0.350
+  gen  30  best=1.0000  mean=0.9508  completion=1.000  evasion=1.000  txns=1  diversity=0.371
+  gen  35  best=1.0000  mean=0.9267  completion=1.000  evasion=1.000  txns=1  diversity=0.385
+  gen  40  best=1.0000  mean=0.9661  completion=1.000  evasion=1.000  txns=1  diversity=0.387
+  A_1 champion vs D_1 on held-out episodes: detector recall 0.200  evasion 0.800  success rate 0.80  (GA best fitness 1.000, 2.8 min)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+  fed back 92 operations / 501 rows (20% of original positives, cap 20%) -> D_2 (380 trees)
+
+=== round 2 ===  D_2 holdout recall@budget 0.664  PR-AUC 0.390  tau 0.9141
+  gen   0  best=0.6000  mean=0.0476  completion=1.000  evasion=0.600  txns=1  diversity=0.430
+  gen   5  best=1.0000  mean=0.5334  completion=1.000  evasion=1.000  txns=1  diversity=0.358
+  gen  10  best=1.0000  mean=0.6810  completion=1.000  evasion=1.000  txns=1  diversity=0.354
+  gen  15  best=1.0000  mean=0.7882  completion=1.000  evasion=1.000  txns=1  diversity=0.360
+  gen  20  best=1.0000  mean=0.8128  completion=1.000  evasion=1.000  txns=1  diversity=0.363
+  gen  25  best=1.0000  mean=0.7946  completion=1.000  evasion=1.000  txns=1  diversity=0.341
+  gen  30  best=1.0000  mean=0.8395  completion=1.000  evasion=1.000  txns=1  diversity=0.320
+  gen  35  best=1.0000  mean=0.8341  completion=1.000  evasion=1.000  txns=1  diversity=0.328
+  gen  40  best=1.0000  mean=0.8604  completion=1.000  evasion=1.000  txns=1  diversity=0.347
+  A_2 champion vs D_2 on held-out episodes: detector recall 0.067  evasion 0.933  success rate 0.93  (GA best fitness 1.000, 2.6 min)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+  fed back 128 operations / 502 rows (20% of original positives, cap 20%) -> D_3 (398 trees)
+
+=== round 3 ===  D_3 holdout recall@budget 0.657  PR-AUC 0.407  tau 0.9373
+  gen   0  best=0.8532  mean=0.1027  completion=1.000  evasion=0.854  txns=3  diversity=0.437
+  gen   5  best=0.9999  mean=0.6371  completion=1.000  evasion=1.000  txns=5  diversity=0.386
+  gen  10  best=0.9999  mean=0.6944  completion=1.000  evasion=1.000  txns=4  diversity=0.367
+  gen  15  best=0.9999  mean=0.7195  completion=1.000  evasion=1.000  txns=4  diversity=0.390
+  gen  20  best=0.9999  mean=0.7494  completion=1.000  evasion=1.000  txns=4  diversity=0.382
+  gen  25  best=0.9999  mean=0.8007  completion=1.000  evasion=1.000  txns=4  diversity=0.386
+  gen  30  best=0.9999  mean=0.7767  completion=1.000  evasion=1.000  txns=4  diversity=0.404
+  gen  35  best=0.9999  mean=0.8647  completion=1.000  evasion=1.000  txns=4  diversity=0.390
+  gen  40  best=0.9999  mean=0.8421  completion=1.000  evasion=1.000  txns=4  diversity=0.381
+  A_3 champion vs D_3 on held-out episodes: detector recall 0.125  evasion 0.875  success rate 1.00  (GA best fitness 1.000, 2.8 min)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+  fed back 117 operations / 503 rows (20% of original positives, cap 20%) -> D_4 (400 trees)
+
+=== round 4 ===  D_4 holdout recall@budget 0.668  PR-AUC 0.399  tau 0.9210
+  gen   0  best=0.8823  mean=0.1721  completion=1.000  evasion=0.883  txns=3  diversity=0.455
+  gen   5  best=1.0000  mean=0.6779  completion=1.000  evasion=1.000  txns=1  diversity=0.418
+  gen  10  best=1.0000  mean=0.6439  completion=1.000  evasion=1.000  txns=1  diversity=0.374
+  gen  15  best=1.0000  mean=0.7474  completion=1.000  evasion=1.000  txns=1  diversity=0.377
+  gen  20  best=1.0000  mean=0.7048  completion=1.000  evasion=1.000  txns=1  diversity=0.334
+  gen  25  best=1.0000  mean=0.7319  completion=1.000  evasion=1.000  txns=1  diversity=0.369
+  gen  30  best=1.0000  mean=0.6676  completion=1.000  evasion=1.000  txns=1  diversity=0.346
+  gen  35  best=1.0000  mean=0.7558  completion=1.000  evasion=1.000  txns=1  diversity=0.354
+  gen  40  best=1.0000  mean=0.7718  completion=1.000  evasion=1.000  txns=1  diversity=0.367
+  A_4 champion vs D_4 on held-out episodes: detector recall 0.033  evasion 0.967  success rate 0.97  (GA best fitness 1.000, 2.7 min)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+  fed back 109 operations / 503 rows (20% of original positives, cap 20%) -> D_5 (390 trees)
+
+D_5 (final, no adversary evolved against it): holdout recall@budget 0.669  PR-AUC 0.382
+
+==============================================================================
+ARMS-RACE SUMMARY
+==============================================================================
+measured on 30 held-out episodes
+round | holdout recall  PR-AUC | D_r vs A_r  success | vs naive vs random
+    0 |          0.668   0.424 |      0.000     1.00 |    0.000     0.009
+    1 |          0.660   0.420 |      0.200     0.80 |    0.044     0.062
+    2 |          0.664   0.390 |      0.067     0.93 |    0.044     0.097
+    3 |          0.657   0.407 |      0.125     1.00 |    0.078     0.115
+    4 |          0.668   0.399 |      0.033     0.97 |    0.000     0.091
+    5 |          0.669   0.382 |        nan      nan |    0.000     0.045
+
+cross-play: detector recall, rows D_i, columns A_j
+          A_0    A_1    A_2    A_3    A_4
+  D_0    0.00   0.00   0.03   0.06   0.03
+  D_1    0.60   0.20   0.07   0.05   0.03
+  D_2    0.67   0.23   0.07   0.06   0.03
+  D_3    0.53   0.30   0.17   0.12   0.20
+  D_4    0.37   0.10   0.07   0.06   0.03
+  D_5    0.17   0.00   0.03   0.07   0.03
+
+wrote C:\projs\MINI PROJ\reports\ibm\phase3_metrics.json
+wrote phase3_arms_race.png, phase3_crossplay.png, phase3_typology_recall.png, phase3_gene_drift.png
+detectors saved to C:\projs\MINI PROJ\artifacts\ibm\arena   (30.5 CPU-min, 24.8 min wall-clock -- wall time includes any time the machine slept)
+
+Phase 3 gate
+  [PASS] no holdout collapse (largest drop vs round 0 <= 0.10)
+         largest drop +0.011  (round 0 0.668, min 0.657)
+  [PASS] feedback reaches the detector (mean recall gain on the strategy it was shown > 0.10)
+         mean gain +0.133  per round [0.6, 0.033, 0.1, -0.067, 0.0]
+  [PASS] alert budget held every round (invariant 3)
+         worst |flag rate - budget| = 0.00000
+
+Phase 3 gate: PASS

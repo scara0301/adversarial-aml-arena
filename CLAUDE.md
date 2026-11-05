@@ -63,6 +63,15 @@ artefact"; it inflates Phase 1 by ~3 recall points) and is the first thing to fi
 The same run showed the closed loop works as an artefact *finder*: the next detector, trained on
 that strategy, closed the hole in one round.
 
+**On real data, the adversary may only do what the data does.** Phase 5's first IBM GA run reported
+evasion 1.000 and a completion of 525x the goal. On synthetic data the decoder shares the generator's
+own processes, so it cannot produce anything the world could not; real data has no generator to share.
+The decoder had drawn currencies per tranche (IBM amounts are in each row's own currency, so chained
+USD->Yen legs *created money*; 98% of IBM accounts use one currency) and used "Reinvestment" between two
+accounts (in IBM it is only ever a self-transfer, so the detector had never seen it). `RealWorld` in
+`decoder.py` now restricts a real-data operation to one currency and to the accounts and payment formats
+the ledger itself uses. When adding a new data source, list what its world allows before running the GA.
+
 ## Guards on the feedback loop (Phase 3)
 
 Retraining a detector on its adversary's output invites collapse, forgetting and overfitting.
@@ -93,9 +102,9 @@ relax one without reading `src/arena/loop/pool.py` first.
 | 1 | 1 | Synthetic generator, loader, feature pipeline, LightGBM detector, alert-budget metrics | done — recall@budget 0.537, PR-AUC 0.454 |
 | 2 | 2, 3 | GA adversary: genome, decoder, constraints, fitness, DEAP driver | done — detector recall 0.750 naive vs 0.231 evolved (re-run after the decoder fix) |
 | 3 | 4 | Closed-loop arena: round orchestrator, retraining, arms-race curve | done — detector recall vs its contemporary adversary 0.125 → 0.510 over 5 rounds (adversary still wins 56% of episodes); holdout PR-AUC 0.454 → 0.421. `docs/phase3.md` |
-| 4 | 5 | Streamlit + Plotly dashboard | prototype explainer built ahead of Phase 3 — see `dashboard/README.md` |
-| 5 | -- | Real IBM AML data, PaySim cross-validation | not started |
-| 6 | -- | Final consolidated report | not started |
+| 4 | 5 | Streamlit + Plotly dashboard; flows, attribution drift, decision projection | done — `docs/phase4.md`; dashboard page "Phase 4 — Inside the Arms Race" |
+| 5 | 1, 4 | Real IBM AML data (HI-Small) through the unchanged pipeline; transfer + ablation | done — IBM recall@budget 0.668, PR-AUC 0.424; nothing transfers between worlds. `docs/phase5.md` |
+| 6 | -- | Final consolidated report | done — `docs/report.md` |
 
 ## Commands
 
@@ -108,6 +117,10 @@ uv run python scripts/train_detector.py --ledger data/synthetic/ledger.parquet
 uv run python scripts/evolve_adversary.py --detector artifacts/detector_r0.lgb
 uv run python scripts/run_arena.py          # Phase 3, ~half an hour at full size
 uv run python scripts/reevaluate_arena.py --episodes 200   # sharper measurement, no GA re-run
+uv run python scripts/build_explainability.py               # Phase 4 views from a finished Phase 3 run
+# Phase 5: real IBM data (HI-Small files in data/raw/). The SAME scripts, pointed elsewhere by an overlay:
+ARENA_CONFIG=config/ibm.yaml uv run python scripts/prepare_ibm.py   # then train_detector / evolve_adversary / run_arena
+uv run python scripts/phase5_transfer.py                    # synthetic <-> IBM transfer, feature-group ablation
 uv run pytest -q
 uv run streamlit run dashboard/app.py
 ```
@@ -142,6 +155,8 @@ src/arena/
     reevaluate.py        re-measure a finished run on more episodes with bootstrap CIs (no GA re-run)
     gate.py              the Phase 3 gate (checks the loop works; never requires the detector to win)
     report.py            the four Phase 3 figures + summary, redrawable from reports/phase3_metrics.json
+  explain.py             Phase 4: TreeSHAP attribution drift, fixed projection, decoded flows
+  config.py              YAML config; ARENA_CONFIG lays an overlay (config/ibm.yaml) over the defaults
 dashboard/               Streamlit explainer (see dashboard/README.md)
 ```
 
@@ -185,7 +200,7 @@ without a prohibitive cost.
 
 Recorded so they are not rediscovered at demo time:
 
-1. **You cannot plot the decision boundary** of a ~40-dimensional LightGBM model, despite the
+1. **You cannot plot the decision boundary** of a 74-dimensional LightGBM model, despite the
    synopsis phrasing. The substitutes are a 2-D PCA projection with score contours and -- more
    informative -- SHAP feature-importance drift between rounds, which shows *which* features the
    adversary forced the detector to stop trusting.
@@ -193,8 +208,9 @@ Recorded so they are not rediscovered at demo time:
 3. **PaySim does not transfer cleanly.** Different schema, no comparable account graph or typology
    labels, so the relational features do not carry over. Fallback: validate only the
    per-transaction feature subset.
-4. **Synthetic typologies are cleaner than real ones.** Phase 1/2 numbers on synthetic data are a
-   pipeline check, not the project's headline result. Expect them to drop on real IBM AML data.
+4. **Synthetic numbers are a pipeline check.** Detectors trained on synthetic data and on IBM catch
+   essentially none of each other's laundering (Phase 5: 0.000 and 0.016 recall). And the IBM set is
+   itself simulated (AMLworld): 88% of its laundering is ACH, a shortcut the IBM detector learned.
 5. **The generator's laundering is never a round number**, while 21.6% of benign amounts are. That
    is a free tell the detector learned (`amount_mod_100`, the #2 feature), worth about +3 points of
    recall and +2 of PR-AUC in Phase 1 (measured by ablation, `docs/phase1.md`). Real laundering is

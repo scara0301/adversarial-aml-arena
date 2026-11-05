@@ -1,0 +1,94 @@
+{
+  "source": "HI-Small_Trans.csv",
+  "cleaning": {
+    "rows_read": 5078345,
+    "positives_read": 5177,
+    "self_transfers_dropped": 591212,
+    "self_transfer_positives_dropped": 11,
+    "tail_cut_at": "2022-09-11 00:00:00",
+    "tail_rows_dropped": 715,
+    "tail_positives_dropped": 652,
+    "positives_matched_to_pattern": 2546,
+    "pattern_rows_promoted_to_positive": 0,
+    "rows_kept": 4486418,
+    "positives_kept": 4514
+  },
+  "profile": {
+    "rows": 4486418,
+    "positives": 4514,
+    "positive_rate": 0.0010061478890286194,
+    "accounts": 422648,
+    "banks": 23378,
+    "start": "2022-09-01 00:00:00",
+    "end": "2022-09-10 23:59:00",
+    "days": 10,
+    "currencies": 15,
+    "cross_currency_share": 0.00048813998160670717,
+    "round_100_share": {
+      "benign": 0.00012918616730746575,
+      "laundering": 0.00022153300841825432
+    },
+    "median_amount": {
+      "benign": 1407.25,
+      "laundering": 7688.46
+    },
+    "typology_rows": {
+      "unattributed": 1968,
+      "gather-scatter": 951,
+      "stack": 583,
+      "fan-out": 517,
+      "fan-in": 252,
+      "cycle": 243
+    },
+    "typology_patterns": {
+      "cycle": 54,
+      "fan-in": 40,
+      "fan-out": 93,
+      "gather-scatter": 95,
+      "stack": 81,
+      "unattributed": 0
+    },
+    "payment_format_share": {
+      "benign": {
+        "Cheque": 0.41454279252746157,
+        "Credit Card": 0.2942816267372081,
+        "ACH": 0.11711875131640481,
+        "Cash": 0.10917859909538447,
+        "Wire": 0.038166814817988066,
+        "Bitcoin": 0.026711415505552998
+      },
+      "laundering": {
+        "ACH": 0.8462560921577315,
+        "Cheque": 0.0717766947275144,
+        "Credit Card": 0.04563579973416039,
+        "Cash": 0.023925564909171467,
+        "Bitcoin": 0.012405848471422242,
+        "Wire": 0.0
+      }
+    },
+    "rows_per_day": {
+      "2022-09-01": 607511,
+      "2022-09-02": 738969,
+      "2022-09-03": 203050,
+      "2022-09-04": 203066,
+      "2022-09-05": 472251,
+      "2022-09-06": 471688,
+      "2022-09-07": 472361,
+      "2022-09-08": 472365,
+      "2022-09-09": 641223,
+      "2022-09-10": 203934
+    },
+    "positives_per_day": {
+      "2022-09-01": 321,
+      "2022-09-02": 408,
+      "2022-09-03": 390,
+      "2022-09-04": 405,
+      "2022-09-05": 470,
+      "2022-09-06": 530,
+      "2022-09-07": 497,
+      "2022-09-08": 539,
+      "2022-09-09": 513,
+      "2022-09-10": 441
+    }
+  }
+}

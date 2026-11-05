@@ -1,0 +1,3 @@
+timestamp,from_bank,from_account,to_bank,to_account,amount_paid,payment_currency,amount_received,receiving_currency,payment_format,is_laundering,typology,pattern_id,source
+2022-09-04 23:07:53.089964734,211212,8121DFA70,142553,8139A8AC0,130204.82559732263,US Dollar,130204.82559732263,US Dollar,Credit Card,1,gather-scatter,0,adversary
+2022-09-05 09:00:00.000000000,211212,8121DFA70,142553,8139A8AC0,119795.17440267737,US Dollar,119795.17440267737,US Dollar,Wire,1,gather-scatter,0,adversary

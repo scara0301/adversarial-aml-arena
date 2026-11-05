@@ -1,0 +1,36 @@
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+C:\projs\MINI PROJ\.venv\Lib\site-packages\lightgbm\sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+synthetic: 2,000,001 rows, holdout 500,001 (1,132 pos)  [184s]
+ibm: 4,486,418 rows, holdout 1,121,605 (1,324 pos)  [1188s]
+
+cross-dataset transfer (recall@budget / PR-AUC), rows = trained on, cols = scored on
+   synthetic     0.537 / 0.454      0.000 / 0.001
+   ibm           0.016 / 0.003      0.668 / 0.424
+
+ablation on synthetic (recall@budget / PR-AUC)
+   all features             (74 features)  0.537 / 0.449
+   per-transaction only     (17 features)  0.155 / 0.023
+   relational only          (57 features)  0.455 / 0.366
+   all but payment format   (72 features)  0.527 / 0.444
+
+ablation on ibm (recall@budget / PR-AUC)
+   all features             (74 features)  0.668 / 0.424
+   per-transaction only     (17 features)  0.187 / 0.019
+   relational only          (57 features)  0.617 / 0.290
+   all but payment format   (72 features)  0.636 / 0.351
+
+wrote C:\projs\MINI PROJ\reports\ibm\phase5_transfer.json and phase5_transfer_ablation.png in 1406s

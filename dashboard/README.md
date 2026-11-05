@@ -1,6 +1,6 @@
 # Dashboard
 
-An interactive Streamlit explainer for Phases 1-3.
+An interactive Streamlit dashboard for Phases 1-5 (objective 5).
 
 ```bash
 uv run streamlit run dashboard/app.py
@@ -8,15 +8,26 @@ uv run streamlit run dashboard/app.py
 
 ## What it is, and isn't
 
-Six of the seven pages are read-only: they load `reports/phase{1,2,3}_metrics.json` and the
-`reports/*.png` figures those scripts already wrote, and never touch a trained model. The seventh,
+Eight of the nine pages are read-only: they load `reports/phase{1,2,3}_metrics.json`,
+`reports/phase4_explain.json`, `reports/ibm/*.json` and the figures those scripts already wrote, and
+never touch a trained model. The ninth,
 **Try the Adversary Yourself**, is the exception — it loads the real round-0 detector
 (`artifacts/detector_r0.lgb`) and the frozen background graph, and lets a visitor set the
 adversary's twelve genes with sliders and score the result live.
 
 The Phase 3 page shows the arms-race curve with its bootstrap intervals, the cross-play matrix, and
 the clean-holdout cost, all computed from the JSON with no hard-coded numbers. It is a replay of a
-finished run, not a live feed, and it is not the final Phase 4 dashboard (no SHAP drift view yet).
+finished run, not a live feed.
+
+The Phase 4 page is the round explorer: pick an adversary and one of its decoded operations, and see
+the transfers drawn left to right and scored by D_r (the detector it beat) or D_(r+1) (the one
+retrained on it); then TreeSHAP attribution drift per feature per detector, and a fixed projection
+of real transactions coloured by each detector's decisions. It replaces a "decision boundary" plot,
+which cannot be drawn honestly for a 74-dimensional model (see `docs/phase4.md`).
+
+The Phase 5 page sets the IBM results beside the synthetic ones: cleaning, detector metrics and
+typology recall, the cross-dataset transfer matrix, feature-group ablations, the adversary, and the
+IBM arms race.
 
 ## Layout
 
@@ -30,6 +41,8 @@ dashboard/
     phase1_detector.py  metrics, PR curve, typology recall, feature importance
     phase2_adversary.py convergence, recall gap, winning strategy decoded
     phase3_arms_race.py  arms-race curve + CIs, cross-play matrix, holdout cost, what was fed back
+    phase4_inside.py     flow explorer, attribution drift heatmap, fixed decision projection
+    phase5_ibm.py        the real IBM data beside the synthetic results
     try_it.py            live genome explorer (sliders -> decode -> score)
     how_it_works.py      architecture walkthrough: the shared featurize(), the overlay,
                           money conservation, the simulation exploit the GA found

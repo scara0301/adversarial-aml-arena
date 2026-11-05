@@ -1,0 +1,59 @@
+{
+  "phase": 1,
+  "ledger": "C:\\projs\\MINI PROJ\\data\\processed\\ibm_ledger.parquet",
+  "rows": 4486418,
+  "accounts": 422648,
+  "n_features": 74,
+  "n_trees": 395,
+  "alert_budget": 0.005,
+  "threshold": 0.948780922028336,
+  "holdout": {
+    "n": 1121605,
+    "n_positive": 1324,
+    "positive_rate": 0.0011804512283736252,
+    "threshold": 0.948780922028336,
+    "alert_budget": 0.005,
+    "flag_rate": 0.005000869289990683,
+    "recall_at_budget": 0.668429003021148,
+    "precision_at_budget": 0.15778213585309325,
+    "n_alerts": 5609,
+    "pr_auc": 0.42402838898822104,
+    "roc_auc": 0.9834281111565419,
+    "roc_auc_note": "Misleading at this prevalence: with ~1000 negatives per positive, a large absolute false-positive count barely moves the false-positive rate. Use recall_at_budget and pr_auc.",
+    "typology_recall": {
+      "cycle": 0.9367088607594937,
+      "fan-in": 0.9518072289156626,
+      "fan-out": 0.9060402684563759,
+      "gather-scatter": 0.9559748427672956,
+      "stack": 0.8631578947368421,
+      "unattributed": 0.25544554455445545
+    }
+  },
+  "top_features": {
+    "format_code": 477278.9,
+    "snd_out_uniq_cp": 155728.9,
+    "snd_pair_reps": 73017.7,
+    "snd_out_cnt_1h": 69348.8,
+    "cycle2": 40791.7,
+    "snd_out_cnt_24h": 32253.9,
+    "amount_mod_100": 27812.0,
+    "rcv_since_prev_h": 23086.3,
+    "amount_log": 22239.8,
+    "rcv_age_h": 21366.0,
+    "amount_mod_1000": 21349.4,
+    "snd_since_prev_h": 20807.4,
+    "amount_vs_snd_mean": 20425.6,
+    "format_scrutiny": 19307.9,
+    "snd_age_h": 18680.8,
+    "threshold_gap": 17488.4,
+    "amount_vs_rcv_mean": 15865.0,
+    "hour": 15374.9,
+    "rcv_in_vol": 14940.2,
+    "rcv_in_vol_1h": 14369.7
+  },
+  "split": {
+    "train_rows": 2691850,
+    "valid_rows": 672963,
+    "holdout_rows": 1121605
+  }
+}
